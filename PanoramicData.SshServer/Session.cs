@@ -486,9 +486,41 @@ public partial class Session : IDynamicInvoker
 	#endregion
 
 	#region Handle messages
-	private void HandleMessageCore(Message message) => this.InvokeHandleMessage(message);
+	private void HandleMessageCore(Message message)
+	{
+		switch (message)
+		{
+			case DisconnectMessage disconnectMessage:
+				HandleMessage(disconnectMessage);
+				break;
+			case KeyExchangeInitMessage keyExchangeInitMessage:
+				HandleMessage(keyExchangeInitMessage);
+				break;
+			case KeyExchangeDhInitMessage keyExchangeDhInitMessage:
+				HandleMessage(keyExchangeDhInitMessage);
+				break;
+			case NewKeysMessage newKeysMessage:
+				HandleMessage(newKeysMessage);
+				break;
+			case UnimplementedMessage unimplementedMessage:
+				HandleMessage(unimplementedMessage);
+				break;
+			case ServiceRequestMessage serviceRequestMessage:
+				HandleMessage(serviceRequestMessage);
+				break;
+			case UserAuthServiceMessage userAuthServiceMessage:
+				HandleMessage(userAuthServiceMessage);
+				break;
+			case ConnectionServiceMessage connectionServiceMessage:
+				HandleMessage(connectionServiceMessage);
+				break;
+			default:
+				throw new NotImplementedException();
+		}
+	}
 
-	private void HandleMessage(DisconnectMessage message) => Disconnect(message.ReasonCode, message.Description);
+	private void HandleMessage(DisconnectMessage message)
+		=> Disconnect(message.ReasonCode, message.Description);
 
 	private void HandleMessage(KeyExchangeInitMessage message)
 	{
@@ -602,16 +634,10 @@ public partial class Session : IDynamicInvoker
 	}
 
 	private void HandleMessage(UserAuthServiceMessage message)
-	{
-		var service = GetService<UserAuthService>();
-		service?.HandleMessageCore(message);
-	}
+		=> GetService<UserAuthService>()?.HandleMessageCore(message);
 
 	private void HandleMessage(ConnectionServiceMessage message)
-	{
-		var service = GetService<ConnectionService>();
-		service?.HandleMessageCore(message);
-	}
+		=> GetService<ConnectionService>()?.HandleMessageCore(message);
 	#endregion
 
 	private static string ChooseAlgorithm(string[] serverAlgorithms, string[] clientAlgorithms)
@@ -645,7 +671,12 @@ public partial class Session : IDynamicInvoker
 		return kexAlg.ComputeHash(worker.ToByteArray());
 	}
 
-	private byte[] ComputeEncryptionKey(KexAlgorithm kexAlg, byte[] exchangeHash, int blockSize, byte[] sharedSecret, char letter)
+	private byte[] ComputeEncryptionKey(
+		KexAlgorithm kexAlg,
+		byte[] exchangeHash,
+		int blockSize,
+		byte[] sharedSecret,
+		char letter)
 	{
 		var keyBuffer = new byte[blockSize];
 		var keyBufferIndex = 0;

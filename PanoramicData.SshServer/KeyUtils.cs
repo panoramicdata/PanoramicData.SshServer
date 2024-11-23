@@ -15,16 +15,11 @@ public static class KeyUtils
 		return BitConverter.ToString(bytes).Replace('-', ':');
 	}
 
-	private static PublicKeyAlgorithm GetKeyAlgorithm(string type)
+	private static PublicKeyAlgorithm GetKeyAlgorithm(string type) => type switch
 	{
-		Contract.Requires(type != null);
-
-		return type switch
-		{
-			"rsa-sha2-256" => new RsaKey(),
-			_ => throw new ArgumentOutOfRangeException(nameof(type)),
-		};
-	}
+		"rsa-sha2-256" => new RsaKey(),
+		_ => throw new ArgumentOutOfRangeException(nameof(type)),
+	};
 
 	public static string GeneratePrivateKey(string type)
 	{
