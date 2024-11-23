@@ -14,7 +14,7 @@ public class RsaKey(string key = null) : PublicKeyAlgorithm(key)
 
 	public override void ImportKey(byte[] bytes)
 	{
-		_algorithm.ImportCspBlob(bytes);
+		_algorithm.ImportRSAPrivateKey(bytes, out int bytesRead);
 	}
 
 	public override byte[] ExportKey()
