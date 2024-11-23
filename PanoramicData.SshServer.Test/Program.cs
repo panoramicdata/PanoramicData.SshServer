@@ -21,19 +21,22 @@ class Program
 		using var cts = new CancellationTokenSource();
 		var cancellationToken = cts.Token;
 
+		var sshServer = new SshServer(new StartingInfo(IPAddress.Any, 1022, "SSH-2.0-ExampleApp"));
+
 		// Register Ctrl+C handler
 		Console.CancelKeyPress += (sender, e) =>
 		{
 			Console.WriteLine("Exiting...");
+			sshServer.Stop();
 			e.Cancel = true;
 			cts.Cancel();
 			Environment.Exit(0);
 		};
 
-		var server = new SshServer(new StartingInfo(IPAddress.Any, 1022, "SSH-2.0-ExampleApp"));
-		server.AddHostKey("rsa-sha2-256", await GetPrivateKeyBase64Async("rsa-sha2-256", cancellationToken));
-		server.ConnectionAccepted += SshServerConnectionAccepted;
-		server.Start();
+		sshServer.AddHostKey("rsa-sha2-256", await GetPrivateKeyBase64Async("rsa-sha2-256", cancellationToken));
+		sshServer.SessionStart += SshServerSessionStart;
+		sshServer.SessionEnd += SshServerSessionEnd;
+		sshServer.Start();
 
 		// This will block until the cancellation token is triggered by Ctrl+C
 		await Task.Delay(-1, cancellationToken);
@@ -71,17 +74,32 @@ class Program
 		return privateKeyBase64;
 	}
 
-	static void SshServerConnectionAccepted(object sshServerObject, Session session)
+	static void SshServerSessionStart(object sshServerObject, Session session)
 	{
 		var sshServer = sshServerObject as SshServer
 			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject.GetType().Name}.");
 
 		Console.WriteLine(
-			"SSH Server {0} accepted a client",
-			sshServer.StartingInfo);
+			"SSH Server {0} session opened {1}",
+			sshServer.Id,
+			session.Id);
 
 		session.ServiceRegistered += ServiceRegistered;
 		session.KeysExchanged += KeysExchanged;
+	}
+
+	static void SshServerSessionEnd(object sshServerObject, Session session)
+	{
+		var sshServer = sshServerObject as SshServer
+			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject.GetType().Name}.");
+
+		Console.WriteLine(
+			"SSH Server {0} session closed {1}",
+			sshServer.Id,
+			session.Id);
+
+		session.ServiceRegistered -= ServiceRegistered;
+		session.KeysExchanged -= KeysExchanged;
 	}
 
 	private static void KeysExchanged(object sessionObject, KeyExchangeArgs e)
@@ -111,11 +129,11 @@ class Program
 				}
 
 			case ConnectionService service:
-				service.CommandOpened += Service_CommandOpened;
-				service.EnvReceived += Service_EnvReceived;
-				service.PtyReceived += Service_PtyReceived;
-				service.TcpForwardRequest += Service_TcpForwardRequest;
-				service.WindowChange += Service_WindowChange;
+				service.CommandOpened += CommandOpened;
+				service.EnvReceived += EnvReceived;
+				service.PtyReceived += PtyReceived;
+				service.TcpForwardRequest += TcpForwardRequest;
+				service.WindowChange += WindowChange;
 				break;
 
 			default:
@@ -124,13 +142,13 @@ class Program
 		}
 	}
 
-	static void Service_WindowChange(object connectionServiceObject, WindowChangeArgs windowChangeArgs)
+	static void WindowChange(object connectionServiceObject, WindowChangeArgs windowChangeArgs)
 	{
 		var connectionService = connectionServiceObject as ConnectionService
 				?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
 
 		Console.WriteLine("ConnectionService {0}: Server Channel {1}, Client Channel {2} Window size changed to {3}x{4} ({5}x{6}).",
-			connectionService.Id,
+			connectionService.SessionId,
 			windowChangeArgs.Channel.ServerChannelId,
 			windowChangeArgs.Channel.ClientChannelId,
 			windowChangeArgs.WidthColumns,
@@ -141,7 +159,7 @@ class Program
 		// TODO - record against service and channel id
 	}
 
-	static void Service_TcpForwardRequest(object sender, TcpRequestArgs e)
+	static void TcpForwardRequest(object sender, TcpRequestArgs e)
 	{
 		Console.WriteLine("Received a request to forward data to {0}:{1}", e.Host, e.Port);
 
@@ -158,13 +176,13 @@ class Program
 		tcp.Start();
 	}
 
-	static void Service_PtyReceived(object connectionServiceObject, PtyArgs ptyArgs)
+	static void PtyReceived(object connectionServiceObject, PtyArgs ptyArgs)
 	{
 		var connectionService = connectionServiceObject as ConnectionService
 			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
 
-		Console.WriteLine("ConnectionService: {0} Request to create a PTY received for terminal type {1} ({2}x{3} / {4}x{5})",
-			connectionService.Id,
+		Console.WriteLine("ConnectionService {0} Request to create a PTY received for terminal type {1} ({2}x{3} / {4}x{5})",
+			connectionService.SessionId,
 			ptyArgs.Terminal,
 			ptyArgs.WidthChars,
 			ptyArgs.HeightRows,
@@ -173,13 +191,13 @@ class Program
 		//WindowSize[sender] = new WindowSize(e.WidthChars, e.HeightRows);
 	}
 
-	static void Service_EnvReceived(object connectionServiceObject, EnvironmentArgs e)
+	static void EnvReceived(object connectionServiceObject, EnvironmentArgs e)
 	{
 		var connectionService = connectionServiceObject as ConnectionService
 			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
 
 		Console.WriteLine("ConnectionService {0} Received environment variable {1}:{2}",
-			connectionService.Id,
+			connectionService.SessionId,
 			e.Name,
 			e.Value);
 	}
@@ -205,21 +223,18 @@ class Program
 		userAuthArgs.Result = true;
 	}
 
-	static void Service_CommandOpened(object connectionServiceObject, CommandRequestedArgs commandRequestArgs)
+	static void CommandOpened(object connectionServiceObject, CommandRequestedArgs commandRequestArgs)
 	{
 		var connectionService = connectionServiceObject as ConnectionService
 			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}, but got {connectionServiceObject.GetType().Name}.");
 
 		Console.WriteLine("ConnectionService {0} Channel {1} runs {2}: \"{3}\".",
-		connectionService.Id,
+		connectionService.SessionId,
 		commandRequestArgs.Channel.ServerChannelId,
 		commandRequestArgs.ShellType,
 		commandRequestArgs.CommandText);
 
-		var allow = true;  // func(e.ShellType, e.CommandText, e.AttachedUserauthArgs);
-
-		if (!allow)
-			return;
+		// If this is not supported, just return;
 
 		switch (commandRequestArgs.ShellType)
 		{
@@ -256,7 +271,8 @@ class Program
 					break;
 				}
 
-			case "subsystem":
+			default:
+				// Nothing communicated back
 				break;
 		}
 	}

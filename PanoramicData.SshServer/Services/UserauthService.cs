@@ -70,7 +70,7 @@ public class UserAuthService(Session session) : SshService(session), IDynamicInv
 
 	private void HandleMessage(PublicKeyRequestMessage message)
 	{
-		if (Session._publicKeyAlgorithms.TryGetValue(message.KeyAlgorithmName, out Func<string, Algorithms.PublicKeyAlgorithm> value))
+		if (Session._publicKeyAlgorithms.TryGetValue(message.KeyAlgorithmName, out var value))
 		{
 			var verifed = false;
 

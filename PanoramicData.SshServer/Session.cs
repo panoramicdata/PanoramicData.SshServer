@@ -451,7 +451,7 @@ public class Session : IDynamicInvoker
 	{
 		if (!_blockedMessages.IsEmpty)
 		{
-			while (_blockedMessages.TryDequeue(out Message message))
+			while (_blockedMessages.TryDequeue(out var message))
 			{
 				SendMessageInternal(message);
 			}
@@ -496,15 +496,9 @@ public class Session : IDynamicInvoker
 	#endregion
 
 	#region Handle messages
-	private void HandleMessageCore(Message message)
-	{
-		this.InvokeHandleMessage(message);
-	}
+	private void HandleMessageCore(Message message) => this.InvokeHandleMessage(message);
 
-	private void HandleMessage(DisconnectMessage message)
-	{
-		Disconnect(message.ReasonCode, message.Description);
-	}
+	private void HandleMessage(DisconnectMessage message) => Disconnect(message.ReasonCode, message.Description);
 
 	private void HandleMessage(KeyExchangeInitMessage message)
 	{
@@ -606,7 +600,7 @@ public class Session : IDynamicInvoker
 
 	private void HandleMessage(ServiceRequestMessage message)
 	{
-		SshService service = RegisterService(message.ServiceName);
+		var service = RegisterService(message.ServiceName);
 		if (service != null)
 		{
 			SendMessage(new ServiceAcceptMessage(message.ServiceName));

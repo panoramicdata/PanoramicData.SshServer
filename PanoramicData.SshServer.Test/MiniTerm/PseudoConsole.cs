@@ -23,7 +23,7 @@ internal sealed class PseudoConsole : IDisposable
 		var createResult = CreatePseudoConsole(
 			new COORD { X = (short)width, Y = (short)height },
 			inputReadSide, outputWriteSide,
-			0, out nint hPC);
+			0, out var hPC);
 		if (createResult != 0)
 		{
 			throw new InvalidOperationException("Could not create psuedo console. Error Code " + createResult);

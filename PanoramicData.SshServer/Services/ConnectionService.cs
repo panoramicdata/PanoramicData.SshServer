@@ -20,8 +20,6 @@ public class ConnectionService : SshService, IDynamicInvoker
 
 	private int _serverChannelCounter = -1;
 
-	public Guid Id { get; } = Guid.NewGuid();
-
 	public ConnectionService(Session session, UserauthArgs auth)
 		: base(session)
 	{

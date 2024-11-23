@@ -72,7 +72,7 @@ static class ProcessFactory
 
 	private static PROCESS_INFORMATION RunProcess(ref STARTUPINFOEX sInfoEx, string commandLine)
 	{
-		int securityAttributeSize = Marshal.SizeOf<SECURITY_ATTRIBUTES>();
+		var securityAttributeSize = Marshal.SizeOf<SECURITY_ATTRIBUTES>();
 		var pSec = new SECURITY_ATTRIBUTES { nLength = securityAttributeSize };
 		var tSec = new SECURITY_ATTRIBUTES { nLength = securityAttributeSize };
 		var success = CreateProcess(
@@ -85,7 +85,7 @@ static class ProcessFactory
 			lpEnvironment: nint.Zero,
 			lpCurrentDirectory: null,
 			lpStartupInfo: ref sInfoEx,
-			lpProcessInformation: out PROCESS_INFORMATION pInfo
+			lpProcessInformation: out var pInfo
 		);
 		if (!success)
 		{

@@ -1,18 +1,12 @@
-﻿using PanoramicData.SshServer;
-using System.Diagnostics.Contracts;
+﻿using System;
 
 namespace PanoramicData.SshServer.Services;
 
-public abstract class SshService
+public abstract class SshService(Session session)
 {
-	protected internal readonly Session _session;
+	protected internal readonly Session _session = session ?? throw new ArgumentNullException(nameof(session));
 
-	public SshService(Session session)
-	{
-		Contract.Requires(session != null);
-
-		_session = session;
-	}
+	public Guid SessionId { get; } = session.Id;
 
 	internal protected abstract void CloseService();
 }
