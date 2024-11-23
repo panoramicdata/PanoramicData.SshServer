@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PanoramicData.SshServer;
 
-public class SshServer : IDisposable
+public class SshServer(StartingInfo info) : IDisposable
 {
 	private readonly Lock _lock = new();
 	private readonly List<Session> _sessions = [];
@@ -17,18 +17,7 @@ public class SshServer : IDisposable
 	private bool _started;
 	private TcpListener _listenser = null;
 
-	public SshServer()
-		: this(new StartingInfo())
-	{ }
-
-	public SshServer(StartingInfo info)
-	{
-		Contract.Requires(info != null);
-
-		StartingInfo = info;
-	}
-
-	public StartingInfo StartingInfo { get; private set; }
+	public StartingInfo StartingInfo { get; private set; } = info ?? throw new ArgumentNullException(nameof(info));
 
 	public event EventHandler<Session> ConnectionAccepted;
 	public event EventHandler<Exception> ExceptionRasied;

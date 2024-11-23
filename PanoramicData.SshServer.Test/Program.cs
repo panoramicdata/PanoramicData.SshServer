@@ -1,65 +1,112 @@
-﻿using PanoramicData.SshServer.Services;
+﻿using PanoramicData.SshServer;
+using PanoramicData.SshServer.Services;
+using PanoramicData.SshServer.Test;
 using PanoramicData.SshServer.Test.MiniTerm;
 using System;
+using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace PanoramicData.SshServer.Test;
+namespace ExampleApp;
 
 class Program
 {
-	static int windowWidth, windowHeight;
-
-	static void Main()
+	static async Task Main()
 	{
-		var server = new SshServer(new StartingInfo(IPAddress.Any, 1022, "SSH-2.0-PanoramicDataSshServerTest"));
+		// Create a cancellation token source
+		using var cts = new CancellationTokenSource();
+		var cancellationToken = cts.Token;
 
-		// Generate a new RSA key pair using rsa-sha2-256
-		var rsa = RSA.Create(2048);
-		var privateKey = rsa.ExportRSAPrivateKey();
-		var publicKey = rsa.ExportRSAPublicKey();
+		// Register Ctrl+C handler
+		Console.CancelKeyPress += (sender, e) =>
+		{
+			Console.WriteLine("Exiting...");
+			e.Cancel = true;
+			cts.Cancel();
+			Environment.Exit(0);
+		};
 
-		var publicKeyBase64 = Convert.ToBase64String(publicKey);
-		var privateKeyBase64 = Convert.ToBase64String(privateKey);
-
-		server.AddHostKey("rsa-sha2-256", privateKeyBase64);
-		server.ConnectionAccepted += Server_ConnectionAccepted;
+		var server = new SshServer(new StartingInfo(IPAddress.Any, 1022, "SSH-2.0-ExampleApp"));
+		server.AddHostKey("rsa-sha2-256", await GetPrivateKeyBase64Async("rsa-sha2-256", cancellationToken));
+		server.ConnectionAccepted += SshServerConnectionAccepted;
 		server.Start();
 
-		Task.Delay(-1).Wait();
+		// This will block until the cancellation token is triggered by Ctrl+C
+		await Task.Delay(-1, cancellationToken);
 	}
 
-	static void Server_ConnectionAccepted(object sender, Session e)
+	private static async Task<string> GetPrivateKeyBase64Async(string fileNameRoot, CancellationToken cancellationToken)
 	{
-		Console.WriteLine("Accepted a client.");
+		var publicKeyFileInfo = new FileInfo($"{fileNameRoot}.public.txt");
+		var privateKeyFileInfo = new FileInfo($"{fileNameRoot}.private.txt");
 
-		e.ServiceRegistered += E_ServiceRegistered;
-		e.KeysExchanged += E_KeysExchanged;
+		string privateKeyBase64;
+
+		// Does the private key file exist?
+		if (privateKeyFileInfo.Exists)
+		{
+			// Read the private key
+			privateKeyBase64 = await File.ReadAllTextAsync(privateKeyFileInfo.FullName, cancellationToken);
+		}
+		else
+		{
+			// Generate a new key pair
+			var rsa = RSA.Create(2048);
+
+			// Save the private key
+			var privateKey = rsa.ExportRSAPrivateKey();
+			privateKeyBase64 = Convert.ToBase64String(privateKey);
+			await File.WriteAllTextAsync(privateKeyFileInfo.FullName, privateKeyBase64, cancellationToken);
+
+			// Save the public key for reference
+			var publicKey = rsa.ExportRSAPublicKey();
+			var publicKeyBase64 = Convert.ToBase64String(publicKey);
+			await File.WriteAllTextAsync(publicKeyFileInfo.FullName, publicKeyBase64, cancellationToken);
+		}
+
+		return privateKeyBase64;
 	}
 
-	private static void E_KeysExchanged(object sender, KeyExchangeArgs e)
+	static void SshServerConnectionAccepted(object sshServerObject, Session session)
 	{
+		var sshServer = sshServerObject as SshServer
+			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject.GetType().Name}.");
+
+		Console.WriteLine(
+			"SSH Server {0} accepted a client",
+			sshServer.StartingInfo);
+
+		session.ServiceRegistered += ServiceRegistered;
+		session.KeysExchanged += KeysExchanged;
+	}
+
+	private static void KeysExchanged(object sessionObject, KeyExchangeArgs e)
+	{
+		var session = sessionObject as Session ?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject.GetType().Name}.");
+
 		foreach (var keyExchangeAlg in e.KeyExchangeAlgorithms)
 		{
-			Console.WriteLine("Key exchange algorithm: {0}", keyExchangeAlg);
+			Console.WriteLine("Session {0} Key exchange algorithm: {1}", session.Id, keyExchangeAlg);
 		}
 	}
 
-	static void E_ServiceRegistered(object sender, SshService e)
+	static void ServiceRegistered(object sessionObject, SshService sshService)
 	{
-		var session = (Session)sender;
-		Console.WriteLine("Session {0} requesting {1}.",
-			Convert.ToHexString(session.SessionId), e.GetType().Name);
+		var session = sessionObject as Session ?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject.GetType().Name}.");
 
-		switch (e)
+		Console.WriteLine("Session {0} Requesting {1}.",
+			session.Id,
+			sshService.GetType().Name);
+
+		switch (sshService)
 		{
-			case UserauthService:
+			case UserAuthService userAuthService:
 				{
-					var service = (UserauthService)e;
-					service.Userauth += Service_Userauth;
+					userAuthService.Userauth += Service_Userauth;
 					break;
 				}
 
@@ -70,12 +117,28 @@ class Program
 				service.TcpForwardRequest += Service_TcpForwardRequest;
 				service.WindowChange += Service_WindowChange;
 				break;
+
+			default:
+				Console.WriteLine("Service {0} is not supported.", sshService.GetType().Name);
+				break;
 		}
 	}
 
-	static void Service_WindowChange(object sender, WindowChangeArgs e)
+	static void Service_WindowChange(object connectionServiceObject, WindowChangeArgs windowChangeArgs)
 	{
-		// DEMO MiniTerm not support change window size
+		var connectionService = connectionServiceObject as ConnectionService
+				?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
+
+		Console.WriteLine("ConnectionService {0}: Server Channel {1}, Client Channel {2} Window size changed to {3}x{4} ({5}x{6}).",
+			connectionService.Id,
+			windowChangeArgs.Channel.ServerChannelId,
+			windowChangeArgs.Channel.ClientChannelId,
+			windowChangeArgs.WidthColumns,
+			windowChangeArgs.HeightRows,
+			windowChangeArgs.WidthPixels,
+			windowChangeArgs.HeightPixels);
+
+		// TODO - record against service and channel id
 	}
 
 	static void Service_TcpForwardRequest(object sender, TcpRequestArgs e)
@@ -95,66 +158,106 @@ class Program
 		tcp.Start();
 	}
 
-	static void Service_PtyReceived(object sender, PtyArgs e)
+	static void Service_PtyReceived(object connectionServiceObject, PtyArgs ptyArgs)
 	{
-		Console.WriteLine("Request to create a PTY received for terminal type {0}", e.Terminal);
-		windowWidth = (int)e.WidthChars;
-		windowHeight = (int)e.HeightRows;
+		var connectionService = connectionServiceObject as ConnectionService
+			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
+
+		Console.WriteLine("ConnectionService: {0} Request to create a PTY received for terminal type {1} ({2}x{3} / {4}x{5})",
+			connectionService.Id,
+			ptyArgs.Terminal,
+			ptyArgs.WidthChars,
+			ptyArgs.HeightRows,
+			ptyArgs.WidthPx,
+			ptyArgs.HeightPx);
+		//WindowSize[sender] = new WindowSize(e.WidthChars, e.HeightRows);
 	}
 
-	static void Service_EnvReceived(object sender, EnvironmentArgs e)
+	static void Service_EnvReceived(object connectionServiceObject, EnvironmentArgs e)
 	{
-		Console.WriteLine("Received environment variable {0}:{1}", e.Name, e.Value);
+		var connectionService = connectionServiceObject as ConnectionService
+			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
+
+		Console.WriteLine("ConnectionService {0} Received environment variable {1}:{2}",
+			connectionService.Id,
+			e.Name,
+			e.Value);
 	}
 
-	static void Service_Userauth(object sender, UserauthArgs e)
+	static void Service_Userauth(object userAuthServiceObject, UserauthArgs userAuthArgs)
 	{
-		Console.WriteLine("Client {0} fingerprint: {1}.", e.KeyAlgorithm, e.Fingerprint);
+		var userAuthService = userAuthServiceObject as UserAuthService
+				?? throw new InvalidOperationException($"Expected {nameof(UserAuthService)}.  Received {userAuthServiceObject.GetType().Name}");
 
-		e.Result = true;
+		Console.WriteLine(
+			"Session {0} KeyAlgorithm {1}, Key {2}, Fingerprint: {3}, Username {4}, Password {5}.",
+			userAuthArgs.Session.Id,
+			userAuthArgs.KeyAlgorithm,
+			userAuthArgs.Key,
+			userAuthArgs.Fingerprint,
+			userAuthArgs.Username,
+			userAuthArgs.Password,
+			userAuthArgs.Key,
+			userAuthArgs.KeyAlgorithm
+			);
+
+		// TODO - actually check this!
+		userAuthArgs.Result = true;
 	}
 
-	static void Service_CommandOpened(object sender, CommandRequestedArgs e)
+	static void Service_CommandOpened(object connectionServiceObject, CommandRequestedArgs commandRequestArgs)
 	{
-		Console.WriteLine($"Channel {e.Channel.ServerChannelId} runs {e.ShellType}: \"{e.CommandText}\".");
+		var connectionService = connectionServiceObject as ConnectionService
+			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}, but got {connectionServiceObject.GetType().Name}.");
+
+		Console.WriteLine("ConnectionService {0} Channel {1} runs {2}: \"{3}\".",
+		connectionService.Id,
+		commandRequestArgs.Channel.ServerChannelId,
+		commandRequestArgs.ShellType,
+		commandRequestArgs.CommandText);
 
 		var allow = true;  // func(e.ShellType, e.CommandText, e.AttachedUserauthArgs);
 
 		if (!allow)
 			return;
 
-		if (e.ShellType == "shell")
+		switch (commandRequestArgs.ShellType)
 		{
-			// requirements: Windows 10 RedStone 5, 1809
-			// also, you can call powershell.exe
-			var terminal = new Terminal("cmd.exe", windowWidth, windowHeight);
+			case "shell":
+				{
+					// requirements: Windows 10 RedStone 5, 1809
+					// also, you can call powershell.exe
+					var terminal = new Terminal("cmd.exe", 80, 25); // windowWidth, windowHeight);
 
-			e.Channel.DataReceived += (ss, ee) => terminal.OnInput(ee);
-			e.Channel.CloseReceived += (ss, ee) => terminal.OnClose();
-			terminal.DataReceived += (ss, ee) => e.Channel.SendData(ee);
-			terminal.CloseReceived += (ss, ee) => e.Channel.SendClose(ee);
+					commandRequestArgs.Channel.DataReceived += (ss, ee) => terminal.OnInput(ee);
+					commandRequestArgs.Channel.CloseReceived += (ss, ee) => terminal.OnClose();
+					terminal.DataReceived += (ss, ee) => commandRequestArgs.Channel.SendData(ee);
+					terminal.CloseReceived += (ss, ee) => commandRequestArgs.Channel.SendClose(ee);
 
-			terminal.Run();
-		}
-		else if (e.ShellType == "exec")
-		{
-			var parser = new Regex(@"(?<cmd>git-receive-pack|git-upload-pack|git-upload-archive) \'/?(?<proj>.+)\.git\'");
-			var match = parser.Match(e.CommandText);
-			var command = match.Groups["cmd"].Value;
-			var project = match.Groups["proj"].Value;
+					terminal.Run();
+					break;
+				}
 
-			var git = new GitService(command, project);
+			case "exec":
+				{
+					var parser = new Regex(@"(?<cmd>git-receive-pack|git-upload-pack|git-upload-archive) \'/?(?<proj>.+)\.git\'");
+					var match = parser.Match(commandRequestArgs.CommandText);
+					var command = match.Groups["cmd"].Value;
+					var project = match.Groups["proj"].Value;
 
-			e.Channel.DataReceived += (ss, ee) => git.OnData(ee);
-			e.Channel.CloseReceived += (ss, ee) => git.OnClose();
-			git.DataReceived += (ss, ee) => e.Channel.SendData(ee);
-			git.CloseReceived += (ss, ee) => e.Channel.SendClose(ee);
+					var git = new GitService(command, project);
 
-			git.Start();
-		}
-		else if (e.ShellType == "subsystem")
-		{
-			// do something more
+					commandRequestArgs.Channel.DataReceived += (ss, ee) => git.OnData(ee);
+					commandRequestArgs.Channel.CloseReceived += (ss, ee) => git.OnClose();
+					git.DataReceived += (ss, ee) => commandRequestArgs.Channel.SendData(ee);
+					git.CloseReceived += (ss, ee) => commandRequestArgs.Channel.SendClose(ee);
+
+					git.Start();
+					break;
+				}
+
+			case "subsystem":
+				break;
 		}
 	}
 }

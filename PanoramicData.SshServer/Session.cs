@@ -49,8 +49,13 @@ public class Session : IDynamicInvoker
 	private readonly ManualResetEvent _hasBlockedMessagesWaitHandle = new(true);
 
 	public string ServerVersion { get; private set; }
+
 	public string ClientVersion { get; private set; }
-	public byte[] SessionId { get; private set; }
+
+	public Guid Id { get; } = Guid.NewGuid();
+
+	public byte[] ExchangeHash { get; private set; }
+
 	public T GetService<T>() where T : SshService
 	{
 		return (T)_services.FirstOrDefault(x => x is T);
@@ -66,8 +71,8 @@ public class Session : IDynamicInvoker
 
 		_publicKeyAlgorithms.Add("rsa-sha2-256", x => new RsaKey(x));
 
-		_encryptionAlgorithms.Add("aes256-ctr", () => new CipherInfo(new AesCryptoServiceProvider(), 256, CipherModeEx.CTR));
-		_encryptionAlgorithms.Add("aes256-cbc", () => new CipherInfo(new AesCryptoServiceProvider(), 256, CipherModeEx.CBC));
+		_encryptionAlgorithms.Add("aes256-ctr", () => new CipherInfo(Aes.Create(), 256, CipherModeEx.CTR));
+		_encryptionAlgorithms.Add("aes256-cbc", () => new CipherInfo(Aes.Create(), 256, CipherModeEx.CBC));
 
 		_hmacAlgorithms.Add("hmac-sha2-256", () => new HmacInfo(new HMACSHA256(), 256));
 		_hmacAlgorithms.Add("hmac-sha2-512", () => new HmacInfo(new HMACSHA512(), 512));
@@ -122,10 +127,15 @@ public class Session : IDynamicInvoker
 			while (_socket != null && _socket.Connected)
 			{
 				var message = ReceiveMessage();
-				if (message is UnknownMessage unknownMessage)
-					SendMessage(unknownMessage.MakeUnimplementedMessage());
-				else
-					HandleMessageCore(message);
+				switch (message)
+				{
+					case UnknownMessage unknownMessage:
+						SendMessage(unknownMessage.MakeUnimplementedMessage());
+						break;
+					default:
+						HandleMessageCore(message);
+						break;
+				}
 			}
 		}
 		finally
@@ -541,7 +551,7 @@ public class Session : IDynamicInvoker
 		var hostKeyAndCerts = hostKeyAlg.CreateKeyAndCertificatesData();
 		var exchangeHash = ComputeExchangeHash(kexAlg, hostKeyAndCerts, clientExchangeValue, serverExchangeValue, sharedSecret);
 
-		SessionId ??= exchangeHash;
+		ExchangeHash ??= exchangeHash;
 
 		var clientCipherIV = ComputeEncryptionKey(kexAlg, exchangeHash, clientCipher.BlockSize >> 3, sharedSecret, 'A');
 		var serverCipherIV = ComputeEncryptionKey(kexAlg, exchangeHash, serverCipher.BlockSize >> 3, sharedSecret, 'B');
@@ -609,7 +619,7 @@ public class Session : IDynamicInvoker
 
 	private void HandleMessage(UserauthServiceMessage message)
 	{
-		var service = GetService<UserauthService>();
+		var service = GetService<UserAuthService>();
 		service?.HandleMessageCore(message);
 	}
 
@@ -661,7 +671,7 @@ public class Session : IDynamicInvoker
 				if (currentHash == null)
 				{
 					worker.Write((byte)letter);
-					worker.Write(SessionId);
+					worker.Write(ExchangeHash);
 				}
 				else
 				{
@@ -697,8 +707,8 @@ public class Session : IDynamicInvoker
 		switch (serviceName)
 		{
 			case "ssh-userauth":
-				if (GetService<UserauthService>() == null)
-					service = new UserauthService(this);
+				if (GetService<UserAuthService>() == null)
+					service = new UserAuthService(this);
 				break;
 			case "ssh-connection":
 				if (auth != null && GetService<ConnectionService>() == null)

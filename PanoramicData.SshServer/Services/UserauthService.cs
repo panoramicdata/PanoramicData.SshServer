@@ -5,7 +5,7 @@ using System.Diagnostics.Contracts;
 
 namespace PanoramicData.SshServer.Services;
 
-public class UserauthService(Session session) : SshService(session), IDynamicInvoker
+public class UserAuthService(Session session) : SshService(session), IDynamicInvoker
 {
 	public event EventHandler<UserauthArgs> Userauth;
 
@@ -97,7 +97,7 @@ public class UserauthService(Session session) : SshService(session), IDynamicInv
 
 			using (var worker = new SshDataWorker())
 			{
-				worker.WriteBinary(_session.SessionId);
+				worker.WriteBinary(_session.ExchangeHash);
 				worker.Write(message.PayloadWithoutSignature);
 
 				verifed = keyAlg.VerifyData(worker.ToByteArray(), sig);

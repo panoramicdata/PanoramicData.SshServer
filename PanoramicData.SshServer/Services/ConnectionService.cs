@@ -12,14 +12,15 @@ namespace PanoramicData.SshServer.Services;
 
 public class ConnectionService : SshService, IDynamicInvoker
 {
-	private readonly object _locker = new object();
-	private readonly List<Channel> _channels = new List<Channel>();
+	private readonly Lock _locker = new();
+	private readonly List<Channel> _channels = [];
 	private readonly UserauthArgs _auth = null;
-	private readonly BlockingCollection<ConnectionServiceMessage> _messageQueue =
-		new BlockingCollection<ConnectionServiceMessage>(new ConcurrentQueue<ConnectionServiceMessage>());
-	private readonly CancellationTokenSource _messageCts = new CancellationTokenSource();
+	private readonly BlockingCollection<ConnectionServiceMessage> _messageQueue = new(new ConcurrentQueue<ConnectionServiceMessage>());
+	private readonly CancellationTokenSource _messageCts = new();
 
 	private int _serverChannelCounter = -1;
+
+	public Guid Id { get; } = Guid.NewGuid();
 
 	public ConnectionService(Session session, UserauthArgs auth)
 		: base(session)

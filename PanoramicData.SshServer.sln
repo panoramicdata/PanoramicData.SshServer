@@ -5,7 +5,7 @@ VisualStudioVersion = 17.12.35506.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramicData.SshServer", "PanoramicData.SshServer\PanoramicData.SshServer.csproj", "{3D4BF411-4A19-4BB5-A4ED-A125BF2C2B62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramicData.SshServer.Test", "PanoramicData.SshServer.Test\PanoramicData.SshServer.Test.csproj", "{AF794062-8F7B-460A-94D4-47E12A522A25}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleApp", "PanoramicData.SshServer.Test\ExampleApp.csproj", "{AF794062-8F7B-460A-94D4-47E12A522A25}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{59854309-1242-4DCB-8B89-BEE875DF5C69}"
 	ProjectSection(SolutionItems) = preProject
