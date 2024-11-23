@@ -8,8 +8,6 @@
 		<RepositoryUrl>https://github.com/panoramicdata/PanoramicData.SshServer</RepositoryUrl>
 		<PackageTags>ssh,server,nuget</PackageTags>
 		<Description>PanoramicData.SshServer is an SSH Server, based on FxSsh</Description>
-		<Version>0.1</Version>
-		<AssemblyVersion>0.1</AssemblyVersion>
 		<Title>PanoramicData.SshServer</Title>
 		<Copyright>Panoramic Data Limited</Copyright>
 		<PackageProjectUrl>https://github.com/panoramicdata/PanoramicData.SshServer</PackageProjectUrl>
