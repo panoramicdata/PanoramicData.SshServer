@@ -29,15 +29,9 @@ public class SshDataWorker : IDisposable
 		}
 	}
 
-	public void Write(bool value)
-	{
-		_ms.WriteByte(value ? (byte)1 : (byte)0);
-	}
+	public void Write(bool value) => _ms.WriteByte(value ? (byte)1 : (byte)0);
 
-	public void Write(byte value)
-	{
-		_ms.WriteByte(value);
-	}
+	public void Write(byte value) => _ms.WriteByte(value);
 
 	public void Write(uint value)
 	{
@@ -183,13 +177,7 @@ public class SshDataWorker : IDisposable
 		return ReadBinary((int)length);
 	}
 
-	public byte[] ToByteArray()
-	{
-		return _ms.ToArray();
-	}
+	public byte[] ToByteArray() => _ms.ToArray();
 
-	public void Dispose()
-	{
-		_ms.Dispose();
-	}
+	public void Dispose() => _ms.Dispose();
 }

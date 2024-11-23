@@ -15,13 +15,7 @@ public class DiffieHellmanGroupSha256 : KexAlgorithm
 		_hashAlgorithm = new SHA256CryptoServiceProvider();
 	}
 
-	public override byte[] CreateKeyExchange()
-	{
-		return _exchangeAlgorithm.CreateKeyExchange();
-	}
+	public override byte[] CreateKeyExchange() => _exchangeAlgorithm.CreateKeyExchange();
 
-	public override byte[] DecryptKeyExchange(byte[] exchangeData)
-	{
-		return _exchangeAlgorithm.DecryptKeyExchange(exchangeData);
-	}
+	public override byte[] DecryptKeyExchange(byte[] exchangeData) => _exchangeAlgorithm.DecryptKeyExchange(exchangeData);
 }

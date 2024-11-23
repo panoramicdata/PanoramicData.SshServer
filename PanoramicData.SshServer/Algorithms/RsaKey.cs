@@ -12,15 +12,9 @@ public class RsaKey(string key = null) : PublicKeyAlgorithm(key)
 		get { return "rsa-sha2-256"; }
 	}
 
-	public override void ImportKey(byte[] bytes)
-	{
-		_algorithm.ImportRSAPrivateKey(bytes, out var bytesRead);
-	}
+	public override void ImportKey(byte[] bytes) => _algorithm.ImportRSAPrivateKey(bytes, out var bytesRead);
 
-	public override byte[] ExportKey()
-	{
-		return _algorithm.ExportCspBlob(true);
-	}
+	public override byte[] ExportKey() => _algorithm.ExportCspBlob(true);
 
 	public override void LoadKeyAndCertificatesData(byte[] data)
 	{
@@ -49,23 +43,11 @@ public class RsaKey(string key = null) : PublicKeyAlgorithm(key)
 		return worker.ToByteArray();
 	}
 
-	public override bool VerifyData(byte[] data, byte[] signature)
-	{
-		return _algorithm.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-	}
+	public override bool VerifyData(byte[] data, byte[] signature) => _algorithm.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-	public override bool VerifyHash(byte[] hash, byte[] signature)
-	{
-		return _algorithm.VerifyHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-	}
+	public override bool VerifyHash(byte[] hash, byte[] signature) => _algorithm.VerifyHash(hash, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-	public override byte[] SignData(byte[] data)
-	{
-		return _algorithm.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-	}
+	public override byte[] SignData(byte[] data) => _algorithm.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-	public override byte[] SignHash(byte[] hash)
-	{
-		return _algorithm.SignHash(hash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-	}
+	public override byte[] SignHash(byte[] hash) => _algorithm.SignHash(hash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 }

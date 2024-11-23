@@ -9,8 +9,5 @@ public class ChannelSuccessMessage : ConnectionServiceMessage
 
 	public override byte MessageType { get { return MessageNumber; } }
 
-	protected override void OnGetPacket(SshDataWorker writer)
-	{
-		writer.Write(RecipientChannel);
-	}
+	protected override void OnGetPacket(SshDataWorker writer) => writer.Write(RecipientChannel);
 }

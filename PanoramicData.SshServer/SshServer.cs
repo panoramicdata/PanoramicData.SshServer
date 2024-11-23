@@ -144,10 +144,7 @@ public class SshServer(StartingInfo info) : IDisposable
 		}
 	}
 
-	private void CheckDisposed()
-	{
-		ObjectDisposedException.ThrowIf(_isDisposed, this);
-	}
+	private void CheckDisposed() => ObjectDisposedException.ThrowIf(_isDisposed, this);
 
 	#region IDisposable
 	public void Dispose()

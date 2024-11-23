@@ -30,10 +30,7 @@ abstract class PublicKeyAlgorithmContract : PublicKeyAlgorithm
 		throw new NotImplementedException();
 	}
 
-	public override byte[] CreateKeyAndCertificatesData()
-	{
-		throw new NotImplementedException();
-	}
+	public override byte[] CreateKeyAndCertificatesData() => throw new NotImplementedException();
 
 	public override bool VerifyData(byte[] data, byte[] signature)
 	{

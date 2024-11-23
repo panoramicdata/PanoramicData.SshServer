@@ -38,10 +38,7 @@ public class CommandService
 		_process.StandardInput.BaseStream.Flush();
 	}
 
-	public void OnClose()
-	{
-		_process.StandardInput.BaseStream.Close();
-	}
+	public void OnClose() => _process.StandardInput.BaseStream.Close();
 
 	private void MessageLoop()
 	{

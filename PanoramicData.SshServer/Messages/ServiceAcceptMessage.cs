@@ -17,8 +17,5 @@ public class ServiceAcceptMessage : Message
 
 	public override byte MessageType { get { return MessageNumber; } }
 
-	protected override void OnGetPacket(SshDataWorker writer)
-	{
-		writer.Write(ServiceName, Encoding.ASCII);
-	}
+	protected override void OnGetPacket(SshDataWorker writer) => writer.Write(ServiceName, Encoding.ASCII);
 }

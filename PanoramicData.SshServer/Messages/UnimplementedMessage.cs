@@ -11,13 +11,7 @@ public class UnimplementedMessage : Message
 
 	public override byte MessageType { get { return MessageNumber; } }
 
-	protected override void OnLoad(SshDataWorker reader)
-	{
-		SequenceNumber = reader.ReadUInt32();
-	}
+	protected override void OnLoad(SshDataWorker reader) => SequenceNumber = reader.ReadUInt32();
 
-	protected override void OnGetPacket(SshDataWorker writer)
-	{
-		writer.Write(SequenceNumber);
-	}
+	protected override void OnGetPacket(SshDataWorker writer) => writer.Write(SequenceNumber);
 }

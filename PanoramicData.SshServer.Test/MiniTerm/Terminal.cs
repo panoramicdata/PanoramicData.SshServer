@@ -38,8 +38,7 @@ public sealed class Terminal : IDisposable
 	/// Start the psuedoconsole and run the process as shown in 
 	/// https://docs.microsoft.com/en-us/windows/console/creating-a-pseudoconsole-session#creating-the-pseudoconsole
 	/// </summary>
-	public void Run()
-	{
+	public void Run() =>
 		// copy all pseudoconsole output to stdout
 		Task.Run(() =>
 		{
@@ -56,7 +55,6 @@ public sealed class Terminal : IDisposable
 
 			CloseReceived?.Invoke(this, 0);
 		});
-	}
 
 	public void OnInput(byte[] data)
 	{
@@ -78,8 +76,5 @@ public sealed class Terminal : IDisposable
 		}
 	}
 
-	public void Dispose()
-	{
-		DisposeResources(reader, writer, process, pseudoConsole, outputPipe, inputPipe);
-	}
+	public void Dispose() => DisposeResources(reader, writer, process, pseudoConsole, outputPipe, inputPipe);
 }

@@ -12,8 +12,5 @@ public class ServiceRequestMessage : Message
 
 	public override byte MessageType { get { return MessageNumber; } }
 
-	protected override void OnLoad(SshDataWorker reader)
-	{
-		ServiceName = reader.ReadString(Encoding.ASCII);
-	}
+	protected override void OnLoad(SshDataWorker reader) => ServiceName = reader.ReadString(Encoding.ASCII);
 }

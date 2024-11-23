@@ -32,8 +32,5 @@ internal sealed class PseudoConsole : IDisposable
 		return new PseudoConsole(hPC);
 	}
 
-	public void Dispose()
-	{
-		ClosePseudoConsole(Handle);
-	}
+	public void Dispose() => ClosePseudoConsole(Handle);
 }

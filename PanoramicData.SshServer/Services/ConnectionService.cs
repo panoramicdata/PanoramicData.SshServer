@@ -235,10 +235,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 		channel.OnClose();
 	}
 
-	private void HandleMessage(SessionOpenMessage message)
-	{
-		HandleChannelOpenMessage(message);
-	}
+	private void HandleMessage(SessionOpenMessage message) => HandleChannelOpenMessage(message);
 
 	private SessionChannel HandleChannelOpenMessage(ChannelOpenMessage message)
 	{

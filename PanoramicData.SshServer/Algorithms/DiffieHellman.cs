@@ -80,10 +80,7 @@ public class DiffieHellman : AsymmetricAlgorithm
 		return bytes;
 	}
 
-	private BigInteger BytesToBigint(byte[] bytes)
-	{
-		return new BigInteger(bytes.Reverse().Concat(new byte[] { 0 }).ToArray());
-	}
+	private BigInteger BytesToBigint(byte[] bytes) => new BigInteger(bytes.Reverse().Concat(new byte[] { 0 }).ToArray());
 
 	private byte[] BigintToBytes(BigInteger bigint)
 	{

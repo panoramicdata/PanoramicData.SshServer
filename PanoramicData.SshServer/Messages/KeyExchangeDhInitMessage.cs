@@ -11,8 +11,5 @@ public class KeyExchangeDhInitMessage : Message
 
 	public override byte MessageType { get { return MessageNumber; } }
 
-	protected override void OnLoad(SshDataWorker reader)
-	{
-		E = reader.ReadMpint();
-	}
+	protected override void OnLoad(SshDataWorker reader) => E = reader.ReadMpint();
 }

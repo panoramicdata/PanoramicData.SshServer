@@ -10,11 +10,8 @@ public class UnknownMessage : Message
 
 	public override byte MessageType { get { throw new NotSupportedException(); } }
 
-	public UnimplementedMessage MakeUnimplementedMessage()
+	public UnimplementedMessage MakeUnimplementedMessage() => new UnimplementedMessage()
 	{
-		return new UnimplementedMessage()
-		{
-			SequenceNumber = SequenceNumber
-		};
-	}
+		SequenceNumber = SequenceNumber
+	};
 }

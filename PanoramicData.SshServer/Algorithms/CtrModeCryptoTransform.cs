@@ -70,8 +70,5 @@ public class CtrModeCryptoTransform : ICryptoTransform
 		return output;
 	}
 
-	public void Dispose()
-	{
-		_transform.Dispose();
-	}
+	public void Dispose() => _transform.Dispose();
 }

@@ -26,20 +26,17 @@ public class TcpForwardService
 	public event EventHandler<byte[]> DataReceived;
 	public event EventHandler CloseReceived;
 
-	public void Start()
-	{
-		Task.Run(() =>
-		{
-			try
-			{
-				MessageLoop();
-			}
-			catch
-			{
-				OnClose();
-			}
-		});
-	}
+	public void Start() => Task.Run(() =>
+								{
+									try
+									{
+										MessageLoop();
+									}
+									catch
+									{
+										OnClose();
+									}
+								});
 
 	public void OnData(byte[] data)
 	{

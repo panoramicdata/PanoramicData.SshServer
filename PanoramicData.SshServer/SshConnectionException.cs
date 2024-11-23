@@ -16,8 +16,5 @@ public class SshConnectionException : Exception
 
 	public DisconnectReason DisconnectReason { get; private set; }
 
-	public override string ToString()
-	{
-		return string.Format("SSH connection disconnected because {0}", DisconnectReason);
-	}
+	public override string ToString() => string.Format("SSH connection disconnected because {0}", DisconnectReason);
 }

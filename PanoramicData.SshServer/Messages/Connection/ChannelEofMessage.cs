@@ -9,13 +9,7 @@ public class ChannelEofMessage : ConnectionServiceMessage
 
 	public override byte MessageType { get { return MessageNumber; } }
 
-	protected override void OnLoad(SshDataWorker reader)
-	{
-		RecipientChannel = reader.ReadUInt32();
-	}
+	protected override void OnLoad(SshDataWorker reader) => RecipientChannel = reader.ReadUInt32();
 
-	protected override void OnGetPacket(SshDataWorker writer)
-	{
-		writer.Write(RecipientChannel);
-	}
+	protected override void OnGetPacket(SshDataWorker writer) => writer.Write(RecipientChannel);
 }

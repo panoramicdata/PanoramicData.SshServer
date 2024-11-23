@@ -56,10 +56,7 @@ public class Session : IDynamicInvoker
 
 	public byte[] ExchangeHash { get; private set; }
 
-	public T GetService<T>() where T : SshService
-	{
-		return (T)_services.FirstOrDefault(x => x is T);
-	}
+	public T GetService<T>() where T : SshService => (T)_services.FirstOrDefault(x => x is T);
 
 	static Session()
 	{
@@ -216,10 +213,7 @@ public class Session : IDynamicInvoker
 		throw new SshConnectionException("Couldn't read the protocol version", DisconnectReason.ProtocolError);
 	}
 
-	private void SocketWriteProtocolVersion()
-	{
-		SocketWrite(Encoding.ASCII.GetBytes(ServerVersion + "\r\n"));
-	}
+	private void SocketWriteProtocolVersion() => SocketWrite(Encoding.ASCII.GetBytes(ServerVersion + "\r\n"));
 
 	private byte[] SocketRead(int length)
 	{
