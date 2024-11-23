@@ -2,7 +2,7 @@
 
 namespace FxSsh.Messages.Connection
 {
-    public class ShellRequestMessage : ChannelRequestMessage
-    {
-    }
+	public class ShellRequestMessage : ChannelRequestMessage
+	{
+	}
 }

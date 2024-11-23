@@ -1,17 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>Aimeast</Authors>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/Aimeast/FxSsh</RepositoryUrl>
-    <PackageTags>ssh,ssh-reinforcement,ssh-server,csharp,dotnet-core</PackageTags>
-    <Description>FxSsh is a lightweight SSH server side application as SSH reinforcement of GitCandy. http://gitcandy.com</Description>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>FxSsh.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Authors>Panoramic Data Limited, Aimeast</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/panoramicdata/PanoramicData.SshServer</RepositoryUrl>
+		<PackageTags>ssh,ssh-reinforcement,ssh-server,csharp,dotnet-core</PackageTags>
+		<Description>PanoramicData.SshServer is an SSH Server, based on FxSsh</Description>
+		<Version>0.1</Version>
+		<AssemblyVersion>0.1</AssemblyVersion>
+	</PropertyGroup>
 
 </Project>

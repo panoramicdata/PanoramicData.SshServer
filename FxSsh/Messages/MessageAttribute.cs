@@ -3,18 +3,18 @@ using System.Diagnostics.Contracts;
 
 namespace FxSsh.Messages
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
-    public sealed class MessageAttribute : Attribute
-    {
-        public MessageAttribute(string name, byte number)
-        {
-            Contract.Requires(name != null);
+	[AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+	public sealed class MessageAttribute : Attribute
+	{
+		public MessageAttribute(string name, byte number)
+		{
+			Contract.Requires(name != null);
 
-            Name = name;
-            Number = number;
-        }
+			Name = name;
+			Number = number;
+		}
 
-        public string Name { get; private set; }
-        public byte Number { get; private set; }
-    }
+		public string Name { get; private set; }
+		public byte Number { get; private set; }
+	}
 }

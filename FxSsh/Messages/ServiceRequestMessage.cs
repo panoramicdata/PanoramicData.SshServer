@@ -3,18 +3,18 @@ using System.Text;
 
 namespace FxSsh.Messages
 {
-    [Message("SSH_MSG_SERVICE_REQUEST", MessageNumber)]
-    public class ServiceRequestMessage : Message
-    {
-        private const byte MessageNumber = 5;
+	[Message("SSH_MSG_SERVICE_REQUEST", MessageNumber)]
+	public class ServiceRequestMessage : Message
+	{
+		private const byte MessageNumber = 5;
 
-        public string ServiceName { get; private set; }
+		public string ServiceName { get; private set; }
 
-        public override byte MessageType { get { return MessageNumber; } }
+		public override byte MessageType { get { return MessageNumber; } }
 
-        protected override void OnLoad(SshDataWorker reader)
-        {
-            ServiceName = reader.ReadString(Encoding.ASCII);
-        }
-    }
+		protected override void OnLoad(SshDataWorker reader)
+		{
+			ServiceName = reader.ReadString(Encoding.ASCII);
+		}
+	}
 }

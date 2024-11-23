@@ -1,9 +1,9 @@
 ﻿
 namespace FxSsh.Algorithms
 {
-    public enum CipherModeEx
-    {
-        CBC,
-        CTR,
-    }
+	public enum CipherModeEx
+	{
+		CBC,
+		CTR,
+	}
 }
