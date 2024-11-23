@@ -3,14 +3,9 @@ using System.Text;
 
 namespace PanoramicData.SshServer.Algorithms;
 
-public class DssKey : PublicKeyAlgorithm
+public class DssKey(string key = null) : PublicKeyAlgorithm(key)
 {
-	private readonly DSACryptoServiceProvider _algorithm = new DSACryptoServiceProvider();
-
-	public DssKey(string key = null)
-		: base(key)
-	{
-	}
+	private readonly DSACryptoServiceProvider _algorithm = new();
 
 	public override string Name
 	{

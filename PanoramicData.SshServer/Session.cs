@@ -66,8 +66,11 @@ public class Session : IDynamicInvoker
 
 		_publicKeyAlgorithms.Add("rsa-sha2-256", x => new RsaKey(x));
 
-		_hmacAlgorithms.Add("hmac-md5", () => new HmacInfo(new HMACMD5(), 128));
-		_hmacAlgorithms.Add("hmac-sha1", () => new HmacInfo(new HMACSHA1(), 160));
+		_encryptionAlgorithms.Add("aes256-ctr", () => new CipherInfo(new AesCryptoServiceProvider(), 256, CipherModeEx.CTR));
+		_encryptionAlgorithms.Add("aes256-cbc", () => new CipherInfo(new AesCryptoServiceProvider(), 256, CipherModeEx.CBC));
+
+		_hmacAlgorithms.Add("hmac-sha2-256", () => new HmacInfo(new HMACSHA256(), 256));
+		_hmacAlgorithms.Add("hmac-sha2-512", () => new HmacInfo(new HMACSHA512(), 512));
 
 		_compressionAlgorithms.Add("none", () => new NoCompression());
 
