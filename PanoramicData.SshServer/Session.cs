@@ -34,7 +34,7 @@ public class Session : IDynamicInvoker
 #if DEBUG
 	private readonly TimeSpan _timeout = TimeSpan.FromDays(1);
 #else
-        private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
+	private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
 #endif
 	private readonly Dictionary<string, string> _hostKey;
 
@@ -65,7 +65,6 @@ public class Session : IDynamicInvoker
 		_keyExchangeAlgorithms.Add("diffie-hellman-group1-sha1", () => new DiffieHellmanGroupSha1(new DiffieHellman(1024)));
 
 		_publicKeyAlgorithms.Add("rsa-sha2-256", x => new RsaKey(x));
-		_publicKeyAlgorithms.Add("rsa-sha2-256", x => new DssKey(x));
 
 		_hmacAlgorithms.Add("hmac-md5", () => new HmacInfo(new HMACMD5(), 128));
 		_hmacAlgorithms.Add("hmac-sha1", () => new HmacInfo(new HMACSHA1(), 160));
