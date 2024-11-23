@@ -8,7 +8,7 @@ public class ChannelWindowAdjustMessage : ConnectionServiceMessage
 	public uint RecipientChannel { get; set; }
 	public uint BytesToAdd { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader)
 	{

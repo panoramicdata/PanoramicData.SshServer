@@ -7,7 +7,7 @@ public class ChannelCloseMessage : ConnectionServiceMessage
 
 	public uint RecipientChannel { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader) => RecipientChannel = reader.ReadUInt32();
 

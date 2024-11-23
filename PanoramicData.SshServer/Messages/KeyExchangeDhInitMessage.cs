@@ -9,7 +9,7 @@ public class KeyExchangeDhInitMessage : Message
 
 	public byte[] E { get; private set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader) => E = reader.ReadMpint();
 }

@@ -13,7 +13,7 @@ public class PublicKeyOkMessage : UserauthServiceMessage
 	public string KeyAlgorithmName { get; set; }
 	public byte[] PublicKey { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnGetPacket(SshDataWorker writer)
 	{

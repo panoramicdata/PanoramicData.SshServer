@@ -35,8 +35,5 @@ public static class KeyUtils
 		return Convert.ToBase64String(bytes);
 	}
 
-	public static string[] SupportedAlgorithms
-	{
-		get { return ["rsa-sha2-256"]; }
-	}
+	public static string[] SupportedAlgorithms => ["rsa-sha2-256"];
 }

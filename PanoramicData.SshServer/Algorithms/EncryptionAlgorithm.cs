@@ -28,10 +28,7 @@ public class EncryptionAlgorithm
 		_transform = CreateTransform(isEncryption);
 	}
 
-	public int BlockBytesSize
-	{
-		get { return _algorithm.BlockSize >> 3; }
-	}
+	public int BlockBytesSize => _algorithm.BlockSize >> 3;
 
 	public byte[] Transform(byte[] input)
 	{

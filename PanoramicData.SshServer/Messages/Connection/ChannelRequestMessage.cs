@@ -11,7 +11,7 @@ public class ChannelRequestMessage : ConnectionServiceMessage
 	public string RequestType { get; set; }
 	public bool WantReply { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader)
 	{

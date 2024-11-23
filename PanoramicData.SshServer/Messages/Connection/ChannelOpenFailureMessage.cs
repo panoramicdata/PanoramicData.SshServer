@@ -12,7 +12,7 @@ public class ChannelOpenFailureMessage : ConnectionServiceMessage
 	public string Description { get; set; }
 	public string Language { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnGetPacket(SshDataWorker writer)
 	{

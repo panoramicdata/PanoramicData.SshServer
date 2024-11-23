@@ -14,7 +14,7 @@ public class ChannelOpenMessage : ConnectionServiceMessage
 	public uint InitialWindowSize { get; private set; }
 	public uint MaximumPacketSize { get; private set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader)
 	{

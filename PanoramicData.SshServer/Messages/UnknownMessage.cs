@@ -8,7 +8,7 @@ public class UnknownMessage : Message
 
 	public byte UnknownMessageType { get; set; }
 
-	public override byte MessageType { get { throw new NotSupportedException(); } }
+	public override byte MessageType => throw new NotSupportedException();
 
 	public UnimplementedMessage MakeUnimplementedMessage() => new UnimplementedMessage()
 	{

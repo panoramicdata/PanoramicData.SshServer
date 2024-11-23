@@ -9,7 +9,7 @@ public class UnimplementedMessage : Message
 
 	public uint SequenceNumber { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader) => SequenceNumber = reader.ReadUInt32();
 

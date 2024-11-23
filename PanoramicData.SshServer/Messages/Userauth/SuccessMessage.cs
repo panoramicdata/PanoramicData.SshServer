@@ -7,7 +7,7 @@ public class SuccessMessage : UserauthServiceMessage
 {
 	private const byte MessageNumber = 52;
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnGetPacket(SshDataWorker writer)
 	{

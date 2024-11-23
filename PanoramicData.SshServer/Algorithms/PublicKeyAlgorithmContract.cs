@@ -11,10 +11,7 @@ abstract class PublicKeyAlgorithmContract : PublicKeyAlgorithm
 	{
 	}
 
-	public override string Name
-	{
-		get { throw new NotImplementedException(); }
-	}
+	public override string Name => throw new NotImplementedException();
 
 	public override void ImportKey(byte[] bytes)
 	{

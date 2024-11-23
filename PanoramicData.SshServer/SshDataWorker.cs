@@ -21,13 +21,7 @@ public class SshDataWorker : IDisposable
 		_ms = new MemoryStream(buffer);
 	}
 
-	public long DataAvailable
-	{
-		get
-		{
-			return _ms.Length - _ms.Position;
-		}
-	}
+	public long DataAvailable => _ms.Length - _ms.Position;
 
 	public void Write(bool value) => _ms.WriteByte(value ? (byte)1 : (byte)0);
 

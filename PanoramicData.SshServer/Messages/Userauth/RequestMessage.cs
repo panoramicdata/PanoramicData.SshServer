@@ -14,7 +14,7 @@ public class RequestMessage : UserauthServiceMessage
 	public string ServiceName { get; protected set; }
 	public string MethodName { get; protected set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader)
 	{

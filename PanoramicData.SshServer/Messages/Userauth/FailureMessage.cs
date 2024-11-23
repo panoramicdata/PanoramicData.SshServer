@@ -9,7 +9,7 @@ public class FailureMessage : UserauthServiceMessage
 {
 	private const byte MessageNumber = 51;
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnGetPacket(SshDataWorker writer)
 	{

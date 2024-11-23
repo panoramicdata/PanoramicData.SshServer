@@ -7,10 +7,7 @@ public class RsaKey(string key = null) : PublicKeyAlgorithm(key)
 {
 	private readonly RSACryptoServiceProvider _algorithm = new();
 
-	public override string Name
-	{
-		get { return "rsa-sha2-256"; }
-	}
+	public override string Name => "rsa-sha2-256";
 
 	public override void ImportKey(byte[] bytes) => _algorithm.ImportRSAPrivateKey(bytes, out var bytesRead);
 

@@ -12,7 +12,7 @@ public class ChannelOpenConfirmationMessage : ConnectionServiceMessage
 	public uint InitialWindowSize { get; set; }
 	public uint MaximumPacketSize { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnGetPacket(SshDataWorker writer)
 	{

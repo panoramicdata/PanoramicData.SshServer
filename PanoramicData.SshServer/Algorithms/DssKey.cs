@@ -7,10 +7,7 @@ public class DssKey(string key = null) : PublicKeyAlgorithm(key)
 {
 	private readonly DSACryptoServiceProvider _algorithm = new();
 
-	public override string Name
-	{
-		get { return "ssh-dss"; }
-	}
+	public override string Name => "ssh-dss";
 
 	public override void ImportKey(byte[] bytes) => _algorithm.ImportCspBlob(bytes);
 

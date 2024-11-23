@@ -24,25 +24,13 @@ public class CtrModeCryptoTransform : ICryptoTransform
 		_block = new byte[algorithm.BlockSize >> 3];
 	}
 
-	public bool CanReuseTransform
-	{
-		get { return true; }
-	}
+	public bool CanReuseTransform => true;
 
-	public bool CanTransformMultipleBlocks
-	{
-		get { return true; }
-	}
+	public bool CanTransformMultipleBlocks => true;
 
-	public int InputBlockSize
-	{
-		get { return _algorithm.BlockSize; }
-	}
+	public int InputBlockSize => _algorithm.BlockSize;
 
-	public int OutputBlockSize
-	{
-		get { return _algorithm.BlockSize; }
-	}
+	public int OutputBlockSize => _algorithm.BlockSize;
 
 	public int TransformBlock(byte[] inputBuffer, int inputOffset, int inputCount, byte[] outputBuffer, int outputOffset)
 	{

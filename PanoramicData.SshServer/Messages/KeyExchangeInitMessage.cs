@@ -40,7 +40,7 @@ public class KeyExchangeInitMessage : Message
 
 	public uint Reserved { get; set; }
 
-	public override byte MessageType { get { return MessageNumber; } }
+	public override byte MessageType => MessageNumber;
 
 	protected override void OnLoad(SshDataWorker reader)
 	{
