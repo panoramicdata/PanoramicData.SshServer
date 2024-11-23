@@ -646,19 +646,17 @@ public class Session : IDynamicInvoker
 
 	private byte[] ComputeExchangeHash(KexAlgorithm kexAlg, byte[] hostKeyAndCerts, byte[] clientExchangeValue, byte[] serverExchangeValue, byte[] sharedSecret)
 	{
-		using (var worker = new SshDataWorker())
-		{
-			worker.Write(ClientVersion, Encoding.ASCII);
-			worker.Write(ServerVersion, Encoding.ASCII);
-			worker.WriteBinary(_exchangeContext.ClientKexInitPayload);
-			worker.WriteBinary(_exchangeContext.ServerKexInitPayload);
-			worker.WriteBinary(hostKeyAndCerts);
-			worker.WriteMpint(clientExchangeValue);
-			worker.WriteMpint(serverExchangeValue);
-			worker.WriteMpint(sharedSecret);
+		using var worker = new SshDataWorker();
+		worker.Write(ClientVersion, Encoding.ASCII);
+		worker.Write(ServerVersion, Encoding.ASCII);
+		worker.WriteBinary(_exchangeContext.ClientKexInitPayload);
+		worker.WriteBinary(_exchangeContext.ServerKexInitPayload);
+		worker.WriteBinary(hostKeyAndCerts);
+		worker.WriteMpint(clientExchangeValue);
+		worker.WriteMpint(serverExchangeValue);
+		worker.WriteMpint(sharedSecret);
 
-			return kexAlg.ComputeHash(worker.ToByteArray());
-		}
+		return kexAlg.ComputeHash(worker.ToByteArray());
 	}
 
 	private byte[] ComputeEncryptionKey(KexAlgorithm kexAlg, byte[] exchangeHash, int blockSize, byte[] sharedSecret, char letter)
@@ -699,13 +697,11 @@ public class Session : IDynamicInvoker
 
 	private byte[] ComputeHmac(HmacAlgorithm alg, byte[] payload, uint seq)
 	{
-		using (var worker = new SshDataWorker())
-		{
-			worker.Write(seq);
-			worker.Write(payload);
+		using var worker = new SshDataWorker();
+		worker.Write(seq);
+		worker.Write(payload);
 
-			return alg.ComputeHash(worker.ToByteArray());
-		}
+		return alg.ComputeHash(worker.ToByteArray());
 	}
 
 	internal SshService RegisterService(string serviceName, UserauthArgs auth = null)

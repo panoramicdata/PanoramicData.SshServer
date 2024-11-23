@@ -29,33 +29,29 @@ public class RsaKey : PublicKeyAlgorithm
 
 	public override void LoadKeyAndCertificatesData(byte[] data)
 	{
-		using (var worker = new SshDataWorker(data))
+		using var worker = new SshDataWorker(data);
+		if (worker.ReadString(Encoding.ASCII) != Name)
+			throw new CryptographicException("Key and certificates were not created with this algorithm.");
+
+		var args = new RSAParameters
 		{
-			if (worker.ReadString(Encoding.ASCII) != Name)
-				throw new CryptographicException("Key and certificates were not created with this algorithm.");
+			Exponent = worker.ReadMpint(),
+			Modulus = worker.ReadMpint()
+		};
 
-			var args = new RSAParameters
-			{
-				Exponent = worker.ReadMpint(),
-				Modulus = worker.ReadMpint()
-			};
-
-			_algorithm.ImportParameters(args);
-		}
+		_algorithm.ImportParameters(args);
 	}
 
 	public override byte[] CreateKeyAndCertificatesData()
 	{
-		using (var worker = new SshDataWorker())
-		{
-			var args = _algorithm.ExportParameters(false);
+		using var worker = new SshDataWorker();
+		var args = _algorithm.ExportParameters(false);
 
-			worker.Write(Name, Encoding.ASCII);
-			worker.WriteMpint(args.Exponent);
-			worker.WriteMpint(args.Modulus);
+		worker.Write(Name, Encoding.ASCII);
+		worker.WriteMpint(args.Exponent);
+		worker.WriteMpint(args.Modulus);
 
-			return worker.ToByteArray();
-		}
+		return worker.ToByteArray();
 	}
 
 	public override bool VerifyData(byte[] data, byte[] signature)

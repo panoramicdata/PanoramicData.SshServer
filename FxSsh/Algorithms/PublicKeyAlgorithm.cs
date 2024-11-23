@@ -21,40 +21,33 @@ public abstract class PublicKeyAlgorithm
 
 	public string GetFingerprint()
 	{
-		using (var md5 = MD5.Create())
-		{
-			var bytes = md5.ComputeHash(CreateKeyAndCertificatesData());
-			return BitConverter.ToString(bytes).Replace('-', ':');
-		}
+		var bytes = MD5.HashData(CreateKeyAndCertificatesData());
+		return BitConverter.ToString(bytes).Replace('-', ':');
 	}
 
 	public byte[] GetSignature(byte[] signatureData)
 	{
 		Contract.Requires(signatureData != null);
 
-		using (var worker = new SshDataWorker(signatureData))
-		{
-			if (worker.ReadString(Encoding.ASCII) != Name)
-				throw new CryptographicException("Signature was not created with this algorithm.");
+		using var worker = new SshDataWorker(signatureData);
+		if (worker.ReadString(Encoding.ASCII) != Name)
+			throw new CryptographicException("Signature was not created with this algorithm.");
 
-			var signature = worker.ReadBinary();
-			return signature;
-		}
+		var signature = worker.ReadBinary();
+		return signature;
 	}
 
 	public byte[] CreateSignatureData(byte[] data)
 	{
 		Contract.Requires(data != null);
 
-		using (var worker = new SshDataWorker())
-		{
-			var signature = SignData(data);
+		using var worker = new SshDataWorker();
+		var signature = SignData(data);
 
-			worker.Write(Name, Encoding.ASCII);
-			worker.WriteBinary(signature);
+		worker.Write(Name, Encoding.ASCII);
+		worker.WriteBinary(signature);
 
-			return worker.ToByteArray();
-		}
+		return worker.ToByteArray();
 	}
 
 	public abstract void ImportKey(byte[] bytes);

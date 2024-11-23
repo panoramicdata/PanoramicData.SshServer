@@ -14,26 +14,22 @@ public abstract class Message
 		Contract.Requires(bytes != null);
 
 		RawBytes = bytes;
-		using (var worker = new SshDataWorker(bytes))
-		{
-			var number = worker.ReadByte();
-			if (number != MessageType)
-				throw new ArgumentException(string.Format("Message type {0} is not valid.", number));
+		using var worker = new SshDataWorker(bytes);
+		var number = worker.ReadByte();
+		if (number != MessageType)
+			throw new ArgumentException(string.Format("Message type {0} is not valid.", number));
 
-			OnLoad(worker);
-		}
+		OnLoad(worker);
 	}
 
 	public byte[] GetPacket()
 	{
-		using (var worker = new SshDataWorker())
-		{
-			worker.Write(MessageType);
+		using var worker = new SshDataWorker();
+		worker.Write(MessageType);
 
-			OnGetPacket(worker);
+		OnGetPacket(worker);
 
-			return worker.ToByteArray();
-		}
+		return worker.ToByteArray();
 	}
 
 	public static T LoadFrom<T>(Message message) where T : Message, new()

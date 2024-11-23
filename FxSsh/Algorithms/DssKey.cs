@@ -29,37 +29,33 @@ public class DssKey : PublicKeyAlgorithm
 
 	public override void LoadKeyAndCertificatesData(byte[] data)
 	{
-		using (var worker = new SshDataWorker(data))
+		using var worker = new SshDataWorker(data);
+		if (worker.ReadString(Encoding.ASCII) != Name)
+			throw new CryptographicException("Key and certificates were not created with this algorithm.");
+
+		var args = new DSAParameters
 		{
-			if (worker.ReadString(Encoding.ASCII) != Name)
-				throw new CryptographicException("Key and certificates were not created with this algorithm.");
+			P = worker.ReadMpint(),
+			Q = worker.ReadMpint(),
+			G = worker.ReadMpint(),
+			Y = worker.ReadMpint()
+		};
 
-			var args = new DSAParameters
-			{
-				P = worker.ReadMpint(),
-				Q = worker.ReadMpint(),
-				G = worker.ReadMpint(),
-				Y = worker.ReadMpint()
-			};
-
-			_algorithm.ImportParameters(args);
-		}
+		_algorithm.ImportParameters(args);
 	}
 
 	public override byte[] CreateKeyAndCertificatesData()
 	{
-		using (var worker = new SshDataWorker())
-		{
-			var args = _algorithm.ExportParameters(false);
+		using var worker = new SshDataWorker();
+		var args = _algorithm.ExportParameters(false);
 
-			worker.Write(Name, Encoding.ASCII);
-			worker.WriteMpint(args.P);
-			worker.WriteMpint(args.Q);
-			worker.WriteMpint(args.G);
-			worker.WriteMpint(args.Y);
+		worker.Write(Name, Encoding.ASCII);
+		worker.WriteMpint(args.P);
+		worker.WriteMpint(args.Q);
+		worker.WriteMpint(args.G);
+		worker.WriteMpint(args.Y);
 
-			return worker.ToByteArray();
-		}
+		return worker.ToByteArray();
 	}
 
 	public override bool VerifyData(byte[] data, byte[] signature)
