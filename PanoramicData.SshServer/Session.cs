@@ -601,7 +601,7 @@ public partial class Session : IDynamicInvoker
 			DisconnectReason.ServiceNotAvailable);
 	}
 
-	private void HandleMessage(UserauthServiceMessage message)
+	private void HandleMessage(UserAuthServiceMessage message)
 	{
 		var service = GetService<UserAuthService>();
 		service?.HandleMessageCore(message);
@@ -617,9 +617,15 @@ public partial class Session : IDynamicInvoker
 	private static string ChooseAlgorithm(string[] serverAlgorithms, string[] clientAlgorithms)
 	{
 		foreach (var client in clientAlgorithms)
+		{
 			foreach (var server in serverAlgorithms)
+			{
 				if (client == server)
+				{
 					return client;
+				}
+			}
+		}
 
 		throw new SshConnectionException("Failed to negotiate algorithm.", DisconnectReason.KeyExchangeFailed);
 	}

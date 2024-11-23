@@ -3,7 +3,7 @@
 namespace PanoramicData.SshServer.Messages.Userauth;
 
 [Message("SSH_MSG_USERAUTH_REQUEST", MessageNumber)]
-public class RequestMessage : UserauthServiceMessage
+public class RequestMessage : UserAuthServiceMessage
 {
 	protected const byte MessageNumber = 50;
 

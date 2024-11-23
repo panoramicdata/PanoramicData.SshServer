@@ -1,5 +1,5 @@
 ﻿namespace PanoramicData.SshServer.Messages;
 
-public abstract class UserauthServiceMessage : Message
+public abstract class UserAuthServiceMessage : Message
 {
 }

@@ -3,7 +3,7 @@
 namespace PanoramicData.SshServer.Messages.Userauth;
 
 [Message("SSH_MSG_USERAUTH_FAILURE", MessageNumber)]
-public class FailureMessage : UserauthServiceMessage
+public class FailureMessage : UserAuthServiceMessage
 {
 	private const byte MessageNumber = 51;
 

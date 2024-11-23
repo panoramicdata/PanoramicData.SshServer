@@ -15,7 +15,7 @@ public class UserAuthService(Session session) : SshService(session), IDynamicInv
 	{
 	}
 
-	internal void HandleMessageCore(UserauthServiceMessage message)
+	internal void HandleMessageCore(UserAuthServiceMessage message)
 	{
 		Contract.Requires(message != null);
 

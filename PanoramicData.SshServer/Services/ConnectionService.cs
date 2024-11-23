@@ -12,7 +12,7 @@ namespace PanoramicData.SshServer.Services;
 
 public class ConnectionService : SshService, IDynamicInvoker
 {
-	private readonly Lock _locker = new();
+	private readonly Lock _lock = new();
 	private readonly List<Channel> _channels = [];
 	private readonly UserauthArgs _auth = null;
 	private readonly BlockingCollection<ConnectionServiceMessage> _messageQueue = new(new ConcurrentQueue<ConnectionServiceMessage>());
@@ -40,7 +40,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 	{
 		_messageCts.Cancel();
 
-		lock (_locker)
+		lock (_lock)
 		{
 			foreach (var channel in _channels.ToArray())
 			{
@@ -51,12 +51,12 @@ public class ConnectionService : SshService, IDynamicInvoker
 
 	internal void HandleMessageCore(ConnectionServiceMessage message)
 	{
-		Contract.Requires(message != null);
-
 		if (message is ChannelWindowAdjustMessage)
+		{
 			this.InvokeHandleMessage(message);
+		}
 		else
-			_messageQueue.Add(message);
+		{ _messageQueue.Add(message); }
 	}
 
 	private void MessageLoop()
@@ -246,7 +246,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 			message.MaximumPacketSize,
 			(uint)Interlocked.Increment(ref _serverChannelCounter));
 
-		lock (_locker)
+		lock (_lock)
 			_channels.Add(channel);
 
 		var msg = new ChannelOpenConfirmationMessage
@@ -300,7 +300,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 
 	private T FindChannelByClientId<T>(uint id) where T : Channel
 	{
-		lock (_locker)
+		lock (_lock)
 		{
 			return _channels.FirstOrDefault(x => x.ClientChannelId == id) is not T channel
 				? throw new SshConnectionException(string.Format("Invalid client channel id {0}.", id), DisconnectReason.ProtocolError)
@@ -310,7 +310,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 
 	private T FindChannelByServerId<T>(uint id) where T : Channel
 	{
-		lock (_locker)
+		lock (_lock)
 		{
 			return _channels.FirstOrDefault(x => x.ServerChannelId == id) is not T channel
 				? throw new SshConnectionException(string.Format("Invalid server channel id {0}.", id), DisconnectReason.ProtocolError)
@@ -320,7 +320,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 
 	internal void RemoveChannel(Channel channel)
 	{
-		lock (_locker)
+		lock (_lock)
 		{
 			_channels.Remove(channel);
 		}
