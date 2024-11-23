@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PanoramicData.SshServer.Test;
+namespace ExampleApp;
 
 public class CommandService
 {

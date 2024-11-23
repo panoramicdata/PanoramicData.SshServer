@@ -1,30 +1,24 @@
-﻿using System;
+﻿using ExampleApp.MiniTerm.Native;
+using System;
 using System.Runtime.InteropServices;
-using static PanoramicData.SshServer.Test.MiniTerm.Native.ProcessApi;
 
-namespace PanoramicData.SshServer.Test.MiniTerm.Processes;
+namespace ExampleApp.MiniTerm.Processes;
 
 /// <summary>
 /// Represents an instance of a process.
 /// </summary>
-internal sealed class Process : IDisposable
+internal sealed class Process(Native.ProcessApi.STARTUPINFOEX startupInfo, Native.ProcessApi.PROCESS_INFORMATION processInfo) : IDisposable
 {
-	public Process(STARTUPINFOEX startupInfo, PROCESS_INFORMATION processInfo)
-	{
-		StartupInfo = startupInfo;
-		ProcessInfo = processInfo;
-	}
-
-	public STARTUPINFOEX StartupInfo { get; }
-	public PROCESS_INFORMATION ProcessInfo { get; }
+	public ProcessApi.STARTUPINFOEX StartupInfo { get; } = startupInfo;
+	public ProcessApi.PROCESS_INFORMATION ProcessInfo { get; } = processInfo;
 
 	#region IDisposable Support
 
-	private bool disposedValue = false; // To detect redundant calls
+	private bool _disposedValue = false; // To detect redundant calls
 
 	void Dispose(bool disposing)
 	{
-		if (!disposedValue)
+		if (!_disposedValue)
 		{
 			if (disposing)
 			{
@@ -36,35 +30,35 @@ internal sealed class Process : IDisposable
 			// Free the attribute list
 			if (StartupInfo.lpAttributeList != nint.Zero)
 			{
-				DeleteProcThreadAttributeList(StartupInfo.lpAttributeList);
+				ProcessApi.DeleteProcThreadAttributeList(StartupInfo.lpAttributeList);
 				Marshal.FreeHGlobal(StartupInfo.lpAttributeList);
 			}
 
 			// Close process and thread handles
 			if (ProcessInfo.hProcess != nint.Zero)
 			{
-				CloseHandle(ProcessInfo.hProcess);
+				ProcessApi.CloseHandle(ProcessInfo.hProcess);
 			}
 
 			if (ProcessInfo.hThread != nint.Zero)
 			{
-				CloseHandle(ProcessInfo.hThread);
+				ProcessApi.CloseHandle(ProcessInfo.hThread);
 			}
 
-			disposedValue = true;
+			_disposedValue = true;
 		}
 	}
 
 	~Process()
 	{
-		// Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+		// Do not change this code. Put clean-up code in Dispose(bool disposing) above.
 		Dispose(false);
 	}
 
 	// This code added to correctly implement the disposable pattern.
 	public void Dispose()
 	{
-		// Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+		// Do not change this code. Put clean-up code in Dispose(bool disposing) above.
 		Dispose(true);
 		// use the following line if the finalizer is overridden above.
 		GC.SuppressFinalize(this);

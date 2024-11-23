@@ -253,9 +253,9 @@ public class Session : IDynamicInvoker
 			}
 			catch (SocketException exp)
 			{
-				if (exp.SocketErrorCode == SocketError.WouldBlock ||
-					exp.SocketErrorCode == SocketError.IOPending ||
-					exp.SocketErrorCode == SocketError.NoBufferSpaceAvailable)
+				if (exp.SocketErrorCode is SocketError.WouldBlock or
+					SocketError.IOPending or
+					SocketError.NoBufferSpaceAvailable)
 				{
 					Thread.Sleep(30);
 				}
@@ -282,9 +282,9 @@ public class Session : IDynamicInvoker
 			}
 			catch (SocketException ex)
 			{
-				if (ex.SocketErrorCode == SocketError.WouldBlock ||
-					ex.SocketErrorCode == SocketError.IOPending ||
-					ex.SocketErrorCode == SocketError.NoBufferSpaceAvailable)
+				if (ex.SocketErrorCode is SocketError.WouldBlock or
+					SocketError.IOPending or
+					SocketError.NoBufferSpaceAvailable)
 				{
 					Thread.Sleep(30);
 				}

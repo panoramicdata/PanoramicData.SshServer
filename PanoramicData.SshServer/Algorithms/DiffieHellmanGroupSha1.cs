@@ -12,7 +12,7 @@ public class DiffieHellmanGroupSha1 : KexAlgorithm
 		Contract.Requires(algorithm != null);
 
 		_exchangeAlgorithm = algorithm;
-		_hashAlgorithm = new SHA1CryptoServiceProvider();
+		_hashAlgorithm = SHA1.Create();
 	}
 
 	public override byte[] CreateKeyExchange() => _exchangeAlgorithm.CreateKeyExchange();

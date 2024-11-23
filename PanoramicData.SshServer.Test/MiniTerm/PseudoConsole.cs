@@ -1,8 +1,8 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System;
-using static PanoramicData.SshServer.Test.MiniTerm.Native.PseudoConsoleApi;
+using static ExampleApp.MiniTerm.Native.PseudoConsoleApi;
 
-namespace PanoramicData.SshServer.Test.MiniTerm;
+namespace ExampleApp.MiniTerm;
 
 /// <summary>
 /// Utility functions around the new Pseudo Console APIs

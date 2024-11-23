@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using static PanoramicData.SshServer.Test.MiniTerm.Native.ProcessApi;
+using static ExampleApp.MiniTerm.Native.ProcessApi;
 
-namespace PanoramicData.SshServer.Test.MiniTerm.Processes;
+namespace ExampleApp.MiniTerm.Processes;
 
 /// <summary>
 /// Support for starting and configuring processes.

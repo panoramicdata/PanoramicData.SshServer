@@ -9,7 +9,7 @@ namespace PanoramicData.SshServer;
 public static class DynamicInvoker
 {
 	static Dictionary<string, Action<IDynamicInvoker, Message>> _cache =
-		new Dictionary<string, Action<IDynamicInvoker, Message>>();
+		new();
 
 	public static void InvokeHandleMessage(this IDynamicInvoker instance, Message message)
 	{

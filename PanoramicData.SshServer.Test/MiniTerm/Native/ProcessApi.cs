@@ -1,7 +1,6 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
-namespace PanoramicData.SshServer.Test.MiniTerm.Native;
+namespace ExampleApp.MiniTerm.Native;
 
 /// <summary>
 /// PInvoke signatures for win32 process api
@@ -68,7 +67,7 @@ static class ProcessApi
 		nint lpAttributeList, uint dwFlags, nint attribute, nint lpValue,
 		nint cbSize, nint lpPreviousValue, nint lpReturnSize);
 
-	[DllImport("kernel32.dll")]
+	[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	internal static extern bool CreateProcess(
 		string lpApplicationName, string lpCommandLine, ref SECURITY_ATTRIBUTES lpProcessAttributes,

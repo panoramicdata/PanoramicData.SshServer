@@ -8,6 +8,7 @@ namespace PanoramicData.SshServer;
 public class SshDataWorker : IDisposable
 {
 	private readonly MemoryStream _ms;
+	private bool _disposedValue;
 
 	public SshDataWorker()
 	{
@@ -158,10 +159,7 @@ public class SshDataWorker : IDisposable
 		var data = new byte[length];
 		var bytesRead = _ms.Read(data, 0, length);
 
-		if (bytesRead < length)
-			throw new ArgumentOutOfRangeException("length");
-
-		return data;
+		return bytesRead < length ? throw new ArgumentOutOfRangeException(nameof(length)) : data;
 	}
 
 	public byte[] ReadBinary()
@@ -173,5 +171,23 @@ public class SshDataWorker : IDisposable
 
 	public byte[] ToByteArray() => _ms.ToArray();
 
-	public void Dispose() => _ms.Dispose();
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!_disposedValue)
+		{
+			if (disposing)
+			{
+				_ms.Dispose();
+			}
+
+			_disposedValue = true;
+		}
+	}
+
+	public void Dispose()
+	{
+		// Do not change this code. Put clean-up code in 'Dispose(bool disposing)' method
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
 }

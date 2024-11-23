@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace PanoramicData.SshServer.Test.MiniTerm.Native;
+namespace ExampleApp.MiniTerm.Native;
 
 /// <summary>
 /// PInvoke signatures for win32 pseudo console api

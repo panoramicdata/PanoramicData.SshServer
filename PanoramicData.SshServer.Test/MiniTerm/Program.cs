@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PanoramicData.SshServer.Test.MiniTerm;
+namespace ExampleApp.MiniTerm;
 
 /// <summary>
 /// C# version of:

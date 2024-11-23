@@ -1,7 +1,6 @@
-﻿using PanoramicData.SshServer;
+﻿using ExampleApp.MiniTerm;
+using PanoramicData.SshServer;
 using PanoramicData.SshServer.Services;
-using PanoramicData.SshServer.Test;
-using PanoramicData.SshServer.Test.MiniTerm;
 using System;
 using System.IO;
 using System.Net;

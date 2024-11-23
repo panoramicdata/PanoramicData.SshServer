@@ -302,12 +302,9 @@ public class ConnectionService : SshService, IDynamicInvoker
 	{
 		lock (_locker)
 		{
-			var channel = _channels.FirstOrDefault(x => x.ClientChannelId == id) as T;
-			if (channel == null)
-				throw new SshConnectionException(string.Format("Invalid client channel id {0}.", id),
-					DisconnectReason.ProtocolError);
-
-			return channel;
+			return _channels.FirstOrDefault(x => x.ClientChannelId == id) is not T channel
+				? throw new SshConnectionException(string.Format("Invalid client channel id {0}.", id), DisconnectReason.ProtocolError)
+				: channel;
 		}
 	}
 
@@ -315,12 +312,9 @@ public class ConnectionService : SshService, IDynamicInvoker
 	{
 		lock (_locker)
 		{
-			var channel = _channels.FirstOrDefault(x => x.ServerChannelId == id) as T;
-			if (channel == null)
-				throw new SshConnectionException(string.Format("Invalid server channel id {0}.", id),
-					DisconnectReason.ProtocolError);
-
-			return channel;
+			return _channels.FirstOrDefault(x => x.ServerChannelId == id) is not T channel
+				? throw new SshConnectionException(string.Format("Invalid server channel id {0}.", id), DisconnectReason.ProtocolError)
+				: channel;
 		}
 	}
 

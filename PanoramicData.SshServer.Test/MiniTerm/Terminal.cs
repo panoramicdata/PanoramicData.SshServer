@@ -1,12 +1,10 @@
-﻿using Microsoft.Win32.SafeHandles;
-using PanoramicData.SshServer.Test.MiniTerm.Processes;
+﻿using ExampleApp.MiniTerm.Processes;
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace PanoramicData.SshServer.Test.MiniTerm;
+namespace ExampleApp.MiniTerm;
 
 /// <summary>
 /// The UI of the terminal. It's just a normal console window, but we're managing the input/output.
@@ -14,40 +12,40 @@ namespace PanoramicData.SshServer.Test.MiniTerm;
 /// </summary>
 public sealed class Terminal : IDisposable
 {
-	private PseudoConsolePipe inputPipe;
-	private PseudoConsolePipe outputPipe;
-	private PseudoConsole pseudoConsole;
-	private Process process;
-	private FileStream writer;
-	private FileStream reader;
+	private readonly PseudoConsolePipe _inputPipe;
+	private readonly PseudoConsolePipe _outputPipe;
+	private readonly PseudoConsole _pseudoConsole;
+	private readonly Process _process;
+	private readonly FileStream _writer;
+	private readonly FileStream _reader;
 
 	public Terminal(string command, int windowWidth, int windowHeight)
 	{
-		inputPipe = new PseudoConsolePipe();
-		outputPipe = new PseudoConsolePipe();
-		pseudoConsole = PseudoConsole.Create(inputPipe.ReadSide, outputPipe.WriteSide, windowWidth, windowHeight);
-		process = ProcessFactory.Start(command, PseudoConsole.PseudoConsoleThreadAttribute, pseudoConsole.Handle);
-		writer = new FileStream(inputPipe.WriteSide, FileAccess.Write);
-		reader = new FileStream(outputPipe.ReadSide, FileAccess.Read);
+		_inputPipe = new PseudoConsolePipe();
+		_outputPipe = new PseudoConsolePipe();
+		_pseudoConsole = PseudoConsole.Create(_inputPipe.ReadSide, _outputPipe.WriteSide, windowWidth, windowHeight);
+		_process = ProcessFactory.Start(command, PseudoConsole.PseudoConsoleThreadAttribute, _pseudoConsole.Handle);
+		_writer = new FileStream(_inputPipe.WriteSide, FileAccess.Write);
+		_reader = new FileStream(_outputPipe.ReadSide, FileAccess.Read);
 	}
 
 	public event EventHandler<byte[]> DataReceived;
 	public event EventHandler<uint> CloseReceived;
 
 	/// <summary>
-	/// Start the psuedoconsole and run the process as shown in 
+	/// Start the pseudo console and run the process as shown in 
 	/// https://docs.microsoft.com/en-us/windows/console/creating-a-pseudoconsole-session#creating-the-pseudoconsole
 	/// </summary>
 	public void Run() =>
-		// copy all pseudoconsole output to stdout
+		// copy all pseudo console output to STDOUT
 		Task.Run(() =>
 		{
-			var proc = System.Diagnostics.Process.GetProcessById(process.ProcessInfo.dwProcessId);
+			var proc = System.Diagnostics.Process.GetProcessById(_process.ProcessInfo.dwProcessId);
 
 			var buf = new byte[1024];
 			while (!proc.HasExited)
 			{
-				var length = reader.Read(buf, 0, buf.Length);
+				var length = _reader.Read(buf, 0, buf.Length);
 				if (length == 0)
 					break;
 				DataReceived?.Invoke(this, buf.Take(length).ToArray());
@@ -58,14 +56,14 @@ public sealed class Terminal : IDisposable
 
 	public void OnInput(byte[] data)
 	{
-		writer.Write(data, 0, data.Length);
-		writer.Flush();
+		_writer.Write(data, 0, data.Length);
+		_writer.Flush();
 	}
 
 	public void OnClose()
 	{
-		writer.WriteByte(0x03);
-		writer.Flush();
+		_writer.WriteByte(0x03);
+		_writer.Flush();
 	}
 
 	private void DisposeResources(params IDisposable[] disposables)
@@ -76,5 +74,5 @@ public sealed class Terminal : IDisposable
 		}
 	}
 
-	public void Dispose() => DisposeResources(reader, writer, process, pseudoConsole, outputPipe, inputPipe);
+	public void Dispose() => DisposeResources(_reader, _writer, _process, _pseudoConsole, _outputPipe, _inputPipe);
 }

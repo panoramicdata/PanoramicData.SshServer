@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace PanoramicData.SshServer.Test;
+namespace ExampleApp;
 
 public class GitService : CommandService
 {

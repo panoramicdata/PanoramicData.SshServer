@@ -4,39 +4,28 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace PanoramicData.SshServer.Test;
+namespace ExampleApp;
 
-public class TcpForwardService
+public class TcpForwardService(string host, int port, string originatorIp, int originatorPort)
 {
-	private Socket _socket;
-	private string _host;
-	private int _port;
-	private bool _connected;
-	private List<byte> _blocked;
-
-	public TcpForwardService(string host, int port, string originatorIP, int originatorPort)
-	{
-		_socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-		_host = host;
-		_port = port;
-		_connected = false;
-		_blocked = new List<byte>();
-	}
+	private readonly Socket _socket = new(SocketType.Stream, ProtocolType.Tcp);
+	private readonly List<byte> _blocked = [];
+	private bool _connected = false;
 
 	public event EventHandler<byte[]> DataReceived;
 	public event EventHandler CloseReceived;
 
 	public void Start() => Task.Run(() =>
-								{
-									try
-									{
-										MessageLoop();
-									}
-									catch
-									{
-										OnClose();
-									}
-								});
+	{
+		try
+		{
+			MessageLoop();
+		}
+		catch
+		{
+			OnClose();
+		}
+	});
 
 	public void OnData(byte[] data)
 	{
@@ -74,7 +63,7 @@ public class TcpForwardService
 
 	private void MessageLoop()
 	{
-		_socket.Connect(_host, _port);
+		_socket.Connect(host, port);
 		_connected = true;
 		OnData([]);
 		var bytes = new byte[1024 * 64];
