@@ -18,6 +18,7 @@ public sealed class Terminal : IDisposable
 	private readonly Process _process;
 	private readonly FileStream _writer;
 	private readonly FileStream _reader;
+	private bool _disposedValue;
 
 	public Terminal(string command, int windowWidth, int windowHeight)
 	{
@@ -66,13 +67,28 @@ public sealed class Terminal : IDisposable
 		_writer.Flush();
 	}
 
-	private void DisposeResources(params IDisposable[] disposables)
+	private void Dispose(bool disposing)
 	{
-		foreach (var disposable in disposables)
+		if (!_disposedValue)
 		{
-			disposable.Dispose();
+			if (disposing)
+			{
+				_writer.Dispose();
+				_reader.Dispose();
+				_pseudoConsole.Dispose();
+				_process.Dispose();
+				_inputPipe.Dispose();
+				_outputPipe.Dispose();
+			}
+
+			_disposedValue = true;
 		}
 	}
 
-	public void Dispose() => DisposeResources(_reader, _writer, _process, _pseudoConsole, _outputPipe, _inputPipe);
+	public void Dispose()
+	{
+		// Do not change this code. Put clean-up code in 'Dispose(bool disposing)' method
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
 }

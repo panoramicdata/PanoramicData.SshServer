@@ -13,9 +13,9 @@ public class SshServer(StartingInfo info) : IDisposable
 	private readonly Lock _lock = new();
 	private readonly List<Session> _sessions = [];
 	private readonly Dictionary<string, string> _hostKey = [];
-	private bool _isDisposed;
 	private bool _started;
 	private TcpListener _listener = null;
+	private bool _disposedValue;
 
 	public Guid Id { get; } = Guid.NewGuid();
 
@@ -29,9 +29,10 @@ public class SshServer(StartingInfo info) : IDisposable
 	{
 		lock (_lock)
 		{
-			CheckDisposed();
 			if (_started)
+			{
 				throw new InvalidOperationException("The server is already started.");
+			}
 
 			_listener = StartingInfo.LocalAddress == IPAddress.IPv6Any
 				? TcpListener.Create(StartingInfo.Port) // dual stack
@@ -49,13 +50,12 @@ public class SshServer(StartingInfo info) : IDisposable
 	{
 		lock (_lock)
 		{
-			CheckDisposed();
 			if (!_started)
-				throw new InvalidOperationException("The server is not started.");
+			{
+				return;
+			}
 
 			_listener.Stop();
-
-			_isDisposed = true;
 			_started = false;
 
 			foreach (var session in _sessions.ToArray())
@@ -144,17 +144,24 @@ public class SshServer(StartingInfo info) : IDisposable
 		}
 	}
 
-	private void CheckDisposed() => ObjectDisposedException.ThrowIf(_isDisposed, this);
-
-	#region IDisposable
-	public void Dispose()
+	protected virtual void Dispose(bool disposing)
 	{
-		lock (_lock)
+		if (!_disposedValue)
 		{
-			if (_isDisposed)
-				return;
-			Stop();
+			if (disposing)
+			{
+				Stop();
+				_listener.Dispose();
+			}
+
+			_disposedValue = true;
 		}
 	}
-	#endregion
+
+	public void Dispose()
+	{
+		// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
+	}
 }

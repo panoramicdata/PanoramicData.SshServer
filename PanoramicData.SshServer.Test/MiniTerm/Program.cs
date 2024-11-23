@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ExampleApp.MiniTerm;
+﻿namespace ExampleApp.MiniTerm;
 
 /// <summary>
 /// C# version of:

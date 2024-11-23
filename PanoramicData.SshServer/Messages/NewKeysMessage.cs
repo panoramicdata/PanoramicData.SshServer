@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PanoramicData.SshServer.Messages;
+﻿namespace PanoramicData.SshServer.Messages;
 
 [Message("SSH_MSG_NEWKEYS", MessageNumber)]
 public class NewKeysMessage : Message

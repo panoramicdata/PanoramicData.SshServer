@@ -1,6 +1,4 @@
-﻿using PanoramicData.SshServer;
-
-namespace PanoramicData.SshServer.Messages.Connection;
+﻿namespace PanoramicData.SshServer.Messages.Connection;
 
 [Message("SSH_MSG_CHANNEL_DATA", MessageNumber)]
 public class ChannelDataMessage : ConnectionServiceMessage

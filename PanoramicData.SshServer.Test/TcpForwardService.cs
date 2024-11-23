@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace ExampleApp;
 
-public class TcpForwardService(string host, int port, string originatorIp, int originatorPort)
+public class TcpForwardService(
+	string host,
+	int port)
 {
 	private readonly Socket _socket = new(SocketType.Stream, ProtocolType.Tcp);
 	private readonly List<byte> _blocked = [];

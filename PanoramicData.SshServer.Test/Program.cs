@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ExampleApp;
 
-class Program
+partial class Program
 {
 	static async Task Main()
 	{
@@ -79,8 +79,7 @@ class Program
 			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject.GetType().Name}.");
 
 		Console.WriteLine(
-			"SSH Server {0} session opened {1}",
-			sshServer.Id,
+			"Session {0} opened",
 			session.Id);
 
 		session.ServiceRegistered += ServiceRegistered;
@@ -93,8 +92,7 @@ class Program
 			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject.GetType().Name}.");
 
 		Console.WriteLine(
-			"SSH Server {0} session closed {1}",
-			sshServer.Id,
+			"Session {0} closed",
 			session.Id);
 
 		session.ServiceRegistered -= ServiceRegistered;
@@ -141,13 +139,13 @@ class Program
 		}
 	}
 
-	static void WindowChange(object connectionServiceObject, WindowChangeArgs windowChangeArgs)
+	static void WindowChange(object sessionObject, WindowChangeArgs windowChangeArgs)
 	{
-		var connectionService = connectionServiceObject as ConnectionService
-				?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
+		var session = sessionObject as Session
+				?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
 
-		Console.WriteLine("ConnectionService {0}: Server Channel {1}, Client Channel {2} Window size changed to {3}x{4} ({5}x{6}).",
-			connectionService.SessionId,
+		Console.WriteLine("Session {0}: Server Channel {1}, Client Channel {2} Window size changed to {3}x{4} ({5}x{6}).",
+			session.Id,
 			windowChangeArgs.Channel.ServerChannelId,
 			windowChangeArgs.Channel.ClientChannelId,
 			windowChangeArgs.WidthColumns,
@@ -155,19 +153,20 @@ class Program
 			windowChangeArgs.WidthPixels,
 			windowChangeArgs.HeightPixels);
 
-		// TODO - record against service and channel id
+		// TODO - record against session and channel id
 	}
 
-	static void TcpForwardRequest(object sender, TcpRequestArgs e)
+	static void TcpForwardRequest(object sessionObject, TcpRequestArgs e)
 	{
-		Console.WriteLine("Received a request to forward data to {0}:{1}", e.Host, e.Port);
+		var session = sessionObject as Session
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
 
-		var allow = true;  // func(e.Host, e.Port, e.AttachedUserauthArgs);
+		Console.WriteLine("Session {0} Received a request to forward data to {1}:{2}",
+			session.Id,
+			e.Host,
+			e.Port);
 
-		if (!allow)
-			return;
-
-		var tcp = new TcpForwardService(e.Host, e.Port, e.OriginatorIP, e.OriginatorPort);
+		var tcp = new TcpForwardService(e.Host, e.Port);
 		e.Channel.DataReceived += (ss, ee) => tcp.OnData(ee);
 		e.Channel.CloseReceived += (ss, ee) => tcp.OnClose();
 		tcp.DataReceived += (ss, ee) => e.Channel.SendData(ee);
@@ -175,13 +174,13 @@ class Program
 		tcp.Start();
 	}
 
-	static void PtyReceived(object connectionServiceObject, PtyArgs ptyArgs)
+	static void PtyReceived(object sessionObject, PtyArgs ptyArgs)
 	{
-		var connectionService = connectionServiceObject as ConnectionService
-			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
+		var session = sessionObject as Session
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
 
-		Console.WriteLine("ConnectionService {0} Request to create a PTY received for terminal type {1} ({2}x{3} / {4}x{5})",
-			connectionService.SessionId,
+		Console.WriteLine("Session {0} Request to create a PTY received for terminal type {1} ({2}x{3} / {4}x{5})",
+			session.Id,
 			ptyArgs.Terminal,
 			ptyArgs.WidthChars,
 			ptyArgs.HeightRows,
@@ -190,13 +189,13 @@ class Program
 		//WindowSize[sender] = new WindowSize(e.WidthChars, e.HeightRows);
 	}
 
-	static void EnvReceived(object connectionServiceObject, EnvironmentArgs e)
+	static void EnvReceived(object sessionObject, EnvironmentArgs e)
 	{
-		var connectionService = connectionServiceObject as ConnectionService
-			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}.  Received {connectionServiceObject.GetType().Name}");
+		var session = sessionObject as Session
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
 
-		Console.WriteLine("ConnectionService {0} Received environment variable {1}:{2}",
-			connectionService.SessionId,
+		Console.WriteLine("Session {0} Received environment variable {1}:{2}",
+			session.Id,
 			e.Name,
 			e.Value);
 	}
@@ -222,13 +221,13 @@ class Program
 		userAuthArgs.Result = true;
 	}
 
-	static void CommandOpened(object connectionServiceObject, CommandRequestedArgs commandRequestArgs)
+	static void CommandOpened(object sessionObject, CommandRequestedArgs commandRequestArgs)
 	{
-		var connectionService = connectionServiceObject as ConnectionService
-			?? throw new InvalidOperationException($"Expected {nameof(ConnectionService)}, but got {connectionServiceObject.GetType().Name}.");
+		var session = sessionObject as Session
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject.GetType().Name}.");
 
-		Console.WriteLine("ConnectionService {0} Channel {1} runs {2}: \"{3}\".",
-		connectionService.SessionId,
+		Console.WriteLine("Session {0} Channel {1} runs {2}: \"{3}\".",
+		session.Id,
 		commandRequestArgs.Channel.ServerChannelId,
 		commandRequestArgs.ShellType,
 		commandRequestArgs.CommandText);
@@ -254,7 +253,7 @@ class Program
 
 			case "exec":
 				{
-					var parser = new Regex(@"(?<cmd>git-receive-pack|git-upload-pack|git-upload-archive) \'/?(?<proj>.+)\.git\'");
+					var parser = GitRegex();
 					var match = parser.Match(commandRequestArgs.CommandText);
 					var command = match.Groups["cmd"].Value;
 					var project = match.Groups["proj"].Value;
@@ -275,4 +274,7 @@ class Program
 				break;
 		}
 	}
+
+	[GeneratedRegex(@"(?<cmd>git-receive-pack|git-upload-pack|git-upload-archive) \'/?(?<proj>.+)\.git\'")]
+	private static partial Regex GitRegex();
 }

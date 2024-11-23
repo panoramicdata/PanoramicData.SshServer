@@ -1,5 +1,4 @@
-﻿using PanoramicData.SshServer;
-using System;
+﻿using System;
 
 namespace PanoramicData.SshServer.Messages.Connection;
 

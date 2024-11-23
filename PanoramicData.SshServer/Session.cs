@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace PanoramicData.SshServer;
 
-public class Session : IDynamicInvoker
+public partial class Session : IDynamicInvoker
 {
 	private const byte CarriageReturn = 0x0d;
 	private const byte LineFeed = 0x0a;
@@ -110,7 +110,7 @@ public class Session : IDynamicInvoker
 
 		SocketWriteProtocolVersion();
 		ClientVersion = SocketReadProtocolVersion();
-		if (!Regex.IsMatch(ClientVersion, "SSH-2.0-.+"))
+		if (!SshVersionRegex().IsMatch(ClientVersion))
 		{
 			throw new SshConnectionException(
 				string.Format("Not supported for client SSH version {0}. This server only supports SSH v2.0.", ClientVersion),
@@ -467,9 +467,8 @@ public class Session : IDynamicInvoker
 		}
 	}
 
-	private static Message LoadKexInitMessage()
-	{
-		var message = new KeyExchangeInitMessage
+	private static KeyExchangeInitMessage LoadKexInitMessage()
+		=> new()
 		{
 			KeyExchangeAlgorithms = [.. _keyExchangeAlgorithms.Keys],
 			ServerHostKeyAlgorithms = [.. _publicKeyAlgorithms.Keys],
@@ -484,9 +483,6 @@ public class Session : IDynamicInvoker
 			FirstKexPacketFollows = false,
 			Reserved = 0
 		};
-
-		return message;
-	}
 	#endregion
 
 	#region Handle messages
@@ -587,7 +583,7 @@ public class Session : IDynamicInvoker
 		_hasBlockedMessagesWaitHandle.Set();
 	}
 
-	private void HandleMessage(UnimplementedMessage message)
+	private void HandleMessage(UnimplementedMessage _)
 	{
 		// Nothing to do here
 	}
@@ -741,4 +737,7 @@ public class Session : IDynamicInvoker
 
 		public Algorithms NewAlgorithms;
 	}
+
+	[GeneratedRegex("SSH-2.0-.+")]
+	private static partial Regex SshVersionRegex();
 }

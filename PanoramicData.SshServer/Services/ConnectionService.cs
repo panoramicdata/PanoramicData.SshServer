@@ -101,7 +101,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 		}
 	}
 
-	private void HandleMessage(ShouldIgnoreMessage message)
+	private void HandleMessage(ShouldIgnoreMessage _)
 	{
 	}
 
@@ -114,7 +114,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 			message.OriginatorIPAddress,
 			(int)message.OriginatorPort,
 			_auth);
-		TcpForwardRequest?.Invoke(this, args);
+		TcpForwardRequest?.Invoke(_session, args);
 	}
 
 	private void HandleMessage(DirectTcpIpMessage message)
@@ -126,7 +126,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 			message.OriginatorIPAddress,
 			(int)message.OriginatorPort,
 			_auth);
-		TcpForwardRequest?.Invoke(this, args);
+		TcpForwardRequest?.Invoke(_session, args);
 	}
 
 	private void HandleMessage(ChannelRequestMessage message)
@@ -188,7 +188,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 	{
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
-		EnvReceived?.Invoke(this, new EnvironmentArgs(channel, message.Name, message.Value, _auth));
+		EnvReceived?.Invoke(_session, new EnvironmentArgs(channel, message.Name, message.Value, _auth));
 
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
@@ -198,7 +198,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 	{
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
-		PtyReceived?.Invoke(this,
+		PtyReceived?.Invoke(_session,
 			new PtyArgs(channel,
 				message.Terminal,
 				message.heightPx,
@@ -268,7 +268,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(this, new CommandRequestedArgs(channel, "shell", null, _auth));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "shell", null, _auth));
 	}
 
 	private void HandleMessage(CommandRequestMessage message)
@@ -278,7 +278,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(this, new CommandRequestedArgs(channel, "exec", message.Command, _auth));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "exec", message.Command, _auth));
 	}
 
 	private void HandleMessage(SubsystemRequestMessage message)
@@ -288,14 +288,14 @@ public class ConnectionService : SshService, IDynamicInvoker
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(this, new CommandRequestedArgs(channel, "subsystem", message.Name, _auth));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "subsystem", message.Name, _auth));
 	}
 
 	private void HandleMessage(WindowChangeMessage message)
 	{
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
-		WindowChange?.Invoke(this, new WindowChangeArgs(channel, message.WidthColumns, message.HeightRows, message.WidthPixels, message.HeightPixels));
+		WindowChange?.Invoke(_session, new WindowChangeArgs(channel, message.WidthColumns, message.HeightRows, message.WidthPixels, message.HeightPixels));
 	}
 
 	private T FindChannelByClientId<T>(uint id) where T : Channel

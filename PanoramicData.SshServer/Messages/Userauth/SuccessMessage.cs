@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PanoramicData.SshServer.Messages.Userauth;
+﻿namespace PanoramicData.SshServer.Messages.Userauth;
 
 [Message("SSH_MSG_USERAUTH_SUCCESS", MessageNumber)]
 public class SuccessMessage : UserauthServiceMessage
