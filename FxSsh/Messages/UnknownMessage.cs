@@ -1,21 +1,20 @@
 using System;
 
-namespace FxSsh.Messages
+namespace FxSsh.Messages;
+
+public class UnknownMessage : Message
 {
-	public class UnknownMessage : Message
+	public uint SequenceNumber { get; set; }
+
+	public byte UnknownMessageType { get; set; }
+
+	public override byte MessageType { get { throw new NotSupportedException(); } }
+
+	public UnimplementedMessage MakeUnimplementedMessage()
 	{
-		public uint SequenceNumber { get; set; }
-
-		public byte UnknownMessageType { get; set; }
-
-		public override byte MessageType { get { throw new NotSupportedException(); } }
-
-		public UnimplementedMessage MakeUnimplementedMessage()
+		return new UnimplementedMessage()
 		{
-			return new UnimplementedMessage()
-			{
-				SequenceNumber = SequenceNumber
-			};
-		}
+			SequenceNumber = SequenceNumber
+		};
 	}
 }

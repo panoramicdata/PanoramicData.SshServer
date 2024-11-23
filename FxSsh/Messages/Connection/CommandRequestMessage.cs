@@ -1,16 +1,15 @@
 ﻿using System.Text;
 
-namespace FxSsh.Messages.Connection
+namespace FxSsh.Messages.Connection;
+
+public class CommandRequestMessage : ChannelRequestMessage
 {
-	public class CommandRequestMessage : ChannelRequestMessage
+	public string Command { get; private set; }
+
+	protected override void OnLoad(SshDataWorker reader)
 	{
-		public string Command { get; private set; }
+		base.OnLoad(reader);
 
-		protected override void OnLoad(SshDataWorker reader)
-		{
-			base.OnLoad(reader);
-
-			Command = reader.ReadString(Encoding.ASCII);
-		}
+		Command = reader.ReadString(Encoding.ASCII);
 	}
 }

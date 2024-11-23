@@ -1,23 +1,22 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 
-namespace FxSsh.Algorithms
+namespace FxSsh.Algorithms;
+
+[ContractClassFor(typeof(CompressionAlgorithm))]
+abstract class CompressionAlgorithmContract : CompressionAlgorithm
 {
-	[ContractClassFor(typeof(CompressionAlgorithm))]
-	abstract class CompressionAlgorithmContract : CompressionAlgorithm
+	public override byte[] Compress(byte[] input)
 	{
-		public override byte[] Compress(byte[] input)
-		{
-			Contract.Requires(input != null);
+		Contract.Requires(input != null);
 
-			throw new NotImplementedException();
-		}
+		throw new NotImplementedException();
+	}
 
-		public override byte[] Decompress(byte[] input)
-		{
-			Contract.Requires(input != null);
+	public override byte[] Decompress(byte[] input)
+	{
+		Contract.Requires(input != null);
 
-			throw new NotImplementedException();
-		}
+		throw new NotImplementedException();
 	}
 }

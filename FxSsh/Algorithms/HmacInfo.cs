@@ -2,20 +2,19 @@
 using System.Diagnostics.Contracts;
 using System.Security.Cryptography;
 
-namespace FxSsh.Algorithms
+namespace FxSsh.Algorithms;
+
+public class HmacInfo
 {
-	public class HmacInfo
+	public HmacInfo(KeyedHashAlgorithm algorithm, int keySize)
 	{
-		public HmacInfo(KeyedHashAlgorithm algorithm, int keySize)
-		{
-			Contract.Requires(algorithm != null);
+		Contract.Requires(algorithm != null);
 
-			KeySize = keySize;
-			Hmac = key => new HmacAlgorithm(algorithm, keySize, key);
-		}
-
-		public int KeySize { get; private set; }
-
-		public Func<byte[], HmacAlgorithm> Hmac { get; private set; }
+		KeySize = keySize;
+		Hmac = key => new HmacAlgorithm(algorithm, keySize, key);
 	}
+
+	public int KeySize { get; private set; }
+
+	public Func<byte[], HmacAlgorithm> Hmac { get; private set; }
 }

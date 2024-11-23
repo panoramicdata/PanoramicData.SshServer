@@ -15,7 +15,7 @@ internal sealed class PseudoConsole : IDisposable
 
 	private PseudoConsole(IntPtr handle)
 	{
-		this.Handle = handle;
+		Handle = handle;
 	}
 
 	internal static PseudoConsole Create(SafeFileHandle inputReadSide, SafeFileHandle outputWriteSide, int width, int height)

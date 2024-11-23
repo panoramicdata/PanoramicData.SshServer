@@ -1,7 +1,6 @@
 ﻿
-namespace FxSsh.Messages
+namespace FxSsh.Messages;
+
+public abstract class UserauthServiceMessage : Message
 {
-	public abstract class UserauthServiceMessage : Message
-	{
-	}
 }

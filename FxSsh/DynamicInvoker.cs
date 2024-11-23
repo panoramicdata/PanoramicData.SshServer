@@ -4,40 +4,39 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace FxSsh
+namespace FxSsh;
+
+public static class DynamicInvoker
 {
-	public static class DynamicInvoker
+	static Dictionary<string, Action<IDynamicInvoker, Message>> _cache =
+		new Dictionary<string, Action<IDynamicInvoker, Message>>();
+
+	public static void InvokeHandleMessage(this IDynamicInvoker instance, Message message)
 	{
-		static Dictionary<string, Action<IDynamicInvoker, Message>> _cache =
-			new Dictionary<string, Action<IDynamicInvoker, Message>>();
+		var instype = instance.GetType();
+		var msgtype = message.GetType();
 
-		public static void InvokeHandleMessage(this IDynamicInvoker instance, Message message)
+		var key = instype.Name + '!' + msgtype.Name;
+		var action = _cache.ContainsKey(key) ? _cache[key] : null;
+		if (action == null)
 		{
-			var instype = instance.GetType();
-			var msgtype = message.GetType();
-
-			var key = instype.Name + '!' + msgtype.Name;
-			var action = _cache.ContainsKey(key) ? _cache[key] : null;
-			if (action == null)
-			{
-				var method = instance.GetType()
-					.GetMethod("HandleMessage",
-					BindingFlags.NonPublic | BindingFlags.Instance,
-					null,
-					new[] { message.GetType() },
-					null);
-				var insparam = Expression.Parameter(typeof(IDynamicInvoker));
-				var msgparam = Expression.Parameter(typeof(Message));
-				var call = Expression.Call(
-					Expression.Convert(insparam, instype),
-					method,
-					Expression.Convert(msgparam, msgtype));
-				action = Expression.Lambda<Action<IDynamicInvoker, Message>>(call, insparam, msgparam).Compile();
-				_cache[key] = action;
-			}
-			action(instance, message);
+			var method = instance.GetType()
+				.GetMethod("HandleMessage",
+				BindingFlags.NonPublic | BindingFlags.Instance,
+				null,
+				new[] { message.GetType() },
+				null);
+			var insparam = Expression.Parameter(typeof(IDynamicInvoker));
+			var msgparam = Expression.Parameter(typeof(Message));
+			var call = Expression.Call(
+				Expression.Convert(insparam, instype),
+				method,
+				Expression.Convert(msgparam, msgtype));
+			action = Expression.Lambda<Action<IDynamicInvoker, Message>>(call, insparam, msgparam).Compile();
+			_cache[key] = action;
 		}
+		action(instance, message);
 	}
-
-	public interface IDynamicInvoker { }
 }
+
+public interface IDynamicInvoker { }

@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace FxSsh.Messages.Connection
-{
-	public class SessionOpenMessage : ChannelOpenMessage
-	{
-		protected override void OnLoad(SshDataWorker reader)
-		{
-			base.OnLoad(reader);
+namespace FxSsh.Messages.Connection;
 
-			if (ChannelType != "session")
-				throw new ArgumentException(string.Format("Channel type {0} is not valid.", ChannelType));
-		}
+public class SessionOpenMessage : ChannelOpenMessage
+{
+	protected override void OnLoad(SshDataWorker reader)
+	{
+		base.OnLoad(reader);
+
+		if (ChannelType != "session")
+			throw new ArgumentException(string.Format("Channel type {0} is not valid.", ChannelType));
 	}
 }
