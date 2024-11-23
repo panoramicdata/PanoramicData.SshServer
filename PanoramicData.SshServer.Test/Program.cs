@@ -13,7 +13,7 @@ class Program
 
 	static void Main()
 	{
-		var server = new SshServer(new StartingInfo(IPAddress.Any, 1022, "SSH-2.0-SshServerLoader"));
+		var server = new SshServer(new StartingInfo(IPAddress.Any, 1022, "SSH-2.0-PanoramicDataSshServerTest"));
 		server.AddHostKey("rsa-sha2-256", """
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
 NhAAAAAwEAAQAAAYEAuU4zRaCmg6apylrgQ8BehwyfM949JYXBxw7QUi8njYihoF4OlRdp
@@ -53,7 +53,6 @@ C2RINzkFqibhBH8WZ3AxQt/Wa1cca3CzcrkkvB8YIIIKWVObZveziSlsZgU6zNwvmR3IPT
 PzOxbecqTXEWMAAAAMZGF2aWRARUFSVEgyAQIDBAUGBw==
 """.Replace("\r\n", ""));
 		server.ConnectionAccepted += Server_ConnectionAccepted;
-
 		server.Start();
 
 		Task.Delay(-1).Wait();

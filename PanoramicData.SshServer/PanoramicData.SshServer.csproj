@@ -3,13 +3,32 @@
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Authors>Panoramic Data Limited, Aimeast</Authors>
+		<Authors>Panoramic Data Limited</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/panoramicdata/PanoramicData.SshServer</RepositoryUrl>
-		<PackageTags>ssh,ssh-reinforcement,ssh-server,csharp,dotnet-core</PackageTags>
+		<PackageTags>ssh,server,nuget</PackageTags>
 		<Description>PanoramicData.SshServer is an SSH Server, based on FxSsh</Description>
 		<Version>0.1</Version>
 		<AssemblyVersion>0.1</AssemblyVersion>
+		<Title>PanoramicData.SshServer</Title>
+		<Copyright>Panoramic Data Limited</Copyright>
+		<PackageProjectUrl>https://github.com/panoramicdata/PanoramicData.SshServer</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<IncludeSymbols>True</IncludeSymbols>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Nerdbank.GitVersioning" Version="3.6.146">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
 
 </Project>
