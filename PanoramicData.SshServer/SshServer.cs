@@ -125,7 +125,11 @@ public class SshServer(
 			var socket = _listener.EndAcceptSocket(ar);
 			Task.Run(() =>
 			{
-				var session = new Session(socket, _hostKey, _config.ServerBanner);
+				var session = new Session(
+					socket,
+					_hostKey,
+					_config.ServerBanner,
+					TimeSpan.FromSeconds(_config.InactivityTimeoutSeconds ?? int.MaxValue));
 
 				session.Disconnected += (ss, ee) =>
 				{

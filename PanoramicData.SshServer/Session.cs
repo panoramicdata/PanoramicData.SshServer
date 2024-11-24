@@ -33,11 +33,7 @@ public partial class Session
 
 	private readonly Lock _locker = new();
 	private readonly Socket _socket;
-#if DEBUG
-	private readonly TimeSpan _timeout = TimeSpan.FromDays(1);
-#else
-	private readonly TimeSpan _timeout = TimeSpan.FromSeconds(30);
-#endif
+	private readonly TimeSpan _timeout;
 	private readonly Dictionary<string, string> _hostKey;
 
 	private uint _outboundPacketSequence;
@@ -101,7 +97,7 @@ public partial class Session
 							 .ToDictionary(x => x.Number, x => x.Type);
 	}
 
-	public Session(Socket socket, Dictionary<string, string> hostKey, string serverBanner)
+	public Session(Socket socket, Dictionary<string, string> hostKey, string serverBanner, TimeSpan timeout)
 	{
 		ArgumentNullException.ThrowIfNull(socket, nameof(socket));
 		ArgumentNullException.ThrowIfNull(hostKey, nameof(hostKey));
@@ -109,6 +105,7 @@ public partial class Session
 
 		_socket = socket;
 		_hostKey = hostKey.ToDictionary(s => s.Key, s => s.Value);
+		_timeout = timeout;
 		ServerVersion = serverBanner;
 	}
 

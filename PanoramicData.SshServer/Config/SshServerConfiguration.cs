@@ -22,4 +22,10 @@ public class SshServerConfiguration
 	///	This is typically the SSH server software version.
 	///	It should be in the format "SSH-2.0-software".
 	public string ServerBanner { get; set; } = string.Empty;
+
+	/// <summary>
+	/// The number of seconds of inactivity before the server disconnects the client.
+	/// Leave as null (the default) to never time out
+	/// </summary>
+	public int? InactivityTimeoutSeconds { get; set; } = null;
 }
