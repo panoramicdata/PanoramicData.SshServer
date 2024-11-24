@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using PanoramicData.SshServer.Config;
 using PanoramicData.SshServer.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -10,7 +12,7 @@ using System.Threading.Tasks;
 namespace PanoramicData.SshServer;
 
 public class SshServer(
-	StartingInfo info,
+	IOptions<SshServerConfiguration> options,
 	ISshApplication sshApplication,
 	IKeyManager keyManager) : IHostedService, IDisposable
 {
@@ -23,7 +25,7 @@ public class SshServer(
 
 	public Guid Id { get; } = Guid.NewGuid();
 
-	public StartingInfo StartingInfo { get; private set; } = info ?? throw new ArgumentNullException(nameof(info));
+	private readonly SshServerConfiguration _config = (options ?? throw new ArgumentNullException(nameof(options))).Value;
 
 	public event EventHandler<Session> SessionStart;
 	public event EventHandler<Session> SessionEnd;
@@ -45,9 +47,13 @@ public class SshServer(
 		SessionStart += sshApplication.SshServerSessionStart;
 		SessionEnd += sshApplication.SshServerSessionEnd;
 
-		_listener = StartingInfo.LocalAddress == IPAddress.IPv6Any
-			? TcpListener.Create(StartingInfo.Port) // dual stack
-			: new TcpListener(StartingInfo.LocalAddress, StartingInfo.Port);
+		_listener = _config.LocalAddress switch
+		{
+			"IPv6Any" => TcpListener.Create(_config.Port),
+			"Any" => new TcpListener(IPAddress.Any, _config.Port),
+			_ => new TcpListener(IPAddress.Parse(_config.LocalAddress), _config.Port)
+		};
+
 		_listener.ExclusiveAddressUse = false;
 		_listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
 		_listener.Start();
@@ -114,7 +120,7 @@ public class SshServer(
 			var socket = _listener.EndAcceptSocket(ar);
 			Task.Run(() =>
 			{
-				var session = new Session(socket, _hostKey, StartingInfo.ServerBanner);
+				var session = new Session(socket, _hostKey, _config.ServerBanner);
 
 				session.Disconnected += (ss, ee) =>
 				{

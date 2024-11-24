@@ -3,10 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PanoramicData.SshServer;
+using PanoramicData.SshServer.Config;
 using PanoramicData.SshServer.Interfaces;
 using System;
 using System.IO;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,12 +37,11 @@ partial class Program
 
 		// Register configuration
 		services
-			.Configure<ExampleSshApplicationConfig>(configuration.GetSection("Configuration"));
+			.Configure<SshServerConfiguration>(configuration.GetSection("SshServer"))
+			.Configure<ExampleSshApplicationConfiguration>(configuration.GetSection("Application"))
 
-		// Register services
-		services
+			// Register services
 			.AddSingleton<IHostedService, SshServer>()
-			.AddSingleton(new StartingInfo(IPAddress.Any, 1022, "SSH-2.0-ExampleApp"))
 			.AddSingleton<ISshApplication, ExampleSshApplication>()
 			.AddSingleton<IKeyManager, ExampleKeyManager>()
 			.AddLogging(configure => configure.AddConsole());

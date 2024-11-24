@@ -8,10 +8,10 @@ using System;
 
 namespace ExampleApp;
 internal class ExampleSshApplication(
-	IOptions<ExampleSshApplicationConfig> options,
+	IOptions<ExampleSshApplicationConfiguration> options,
 	ILogger<Program> logger) : ISshApplication
 {
-	private readonly ExampleSshApplicationConfig _config = options.Value;
+	private readonly ExampleSshApplicationConfiguration _config = options.Value;
 
 	public void SshServerSessionStart(object sshServerObject, Session session)
 	{

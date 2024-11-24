@@ -1,6 +1,6 @@
 ﻿namespace ExampleApp;
 
-internal class ExampleSshApplicationConfig
+internal class ExampleSshApplicationConfiguration
 {
 	/// <summary>
 	/// Whether to permit TCP forwarding.
