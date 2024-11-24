@@ -11,7 +11,7 @@ public class FailureMessage : UserAuthServiceMessage
 
 	protected override void OnGetPacket(SshDataWorker writer)
 	{
-		writer.Write("password,publickey", Encoding.ASCII);
+		writer.Write("publickey,password", Encoding.ASCII);
 		writer.Write(false);
 	}
 }

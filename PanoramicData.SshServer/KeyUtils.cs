@@ -18,6 +18,7 @@ public static class KeyUtils
 	private static PublicKeyAlgorithm GetKeyAlgorithm(string type) => type switch
 	{
 		"rsa-sha2-256" => new RsaKey(),
+		"ssh-dss" => new DssKey(),
 		_ => throw new ArgumentOutOfRangeException(nameof(type)),
 	};
 
@@ -30,5 +31,5 @@ public static class KeyUtils
 		return Convert.ToBase64String(bytes);
 	}
 
-	public static string[] SupportedAlgorithms => ["rsa-sha2-256"];
+	public static string[] SupportedAlgorithms => ["rsa-sha2-256", "ssh-dss"];
 }

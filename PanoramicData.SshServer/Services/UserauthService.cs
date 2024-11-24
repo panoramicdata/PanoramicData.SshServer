@@ -1,11 +1,10 @@
 ﻿using PanoramicData.SshServer.Messages;
 using PanoramicData.SshServer.Messages.Userauth;
 using System;
-using System.Diagnostics.Contracts;
 
 namespace PanoramicData.SshServer.Services;
 
-public class UserAuthService(Session session) : SshService(session), IDynamicInvoker
+public class UserAuthService(Session session) : SshService(session)
 {
 	public event EventHandler<UserauthArgs> Userauth;
 
@@ -17,9 +16,21 @@ public class UserAuthService(Session session) : SshService(session), IDynamicInv
 
 	internal void HandleMessageCore(UserAuthServiceMessage message)
 	{
-		Contract.Requires(message != null);
-
-		this.InvokeHandleMessage(message);
+		switch (message)
+		{
+			case PublicKeyRequestMessage publicKeyRequestMessage:
+				HandleMessage(publicKeyRequestMessage);
+				break;
+			case PasswordRequestMessage passwordRequestMessage:
+				HandleMessage(passwordRequestMessage);
+				break;
+			case RequestMessage requestMessage:
+				HandleMessage(requestMessage);
+				break;
+			default:
+				_session.SendMessage(new FailureMessage());
+				break;
+		}
 	}
 
 	private void HandleMessage(RequestMessage message)
@@ -34,8 +45,6 @@ public class UserAuthService(Session session) : SshService(session), IDynamicInv
 				var pswdMsg = Message.LoadFrom<PasswordRequestMessage>(message);
 				HandleMessage(pswdMsg);
 				break;
-			case "hostbased":
-			case "none":
 			default:
 				_session.SendMessage(new FailureMessage());
 				break;

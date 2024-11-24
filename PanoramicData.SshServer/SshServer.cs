@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Hosting;
+using PanoramicData.SshServer.Interfaces;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -8,7 +9,10 @@ using System.Threading.Tasks;
 
 namespace PanoramicData.SshServer;
 
-public class SshServer(StartingInfo info) : IDisposable
+public class SshServer(
+	StartingInfo info,
+	ISshApplication sshApplication,
+	IKeyManager keyManager) : IHostedService, IDisposable
 {
 	private readonly Lock _lock = new();
 	private readonly List<Session> _sessions = [];
@@ -25,34 +29,40 @@ public class SshServer(StartingInfo info) : IDisposable
 	public event EventHandler<Session> SessionEnd;
 	public event EventHandler<Exception> ExceptionRaised;
 
-	public void Start()
+	public async Task StartAsync(CancellationToken cancellationToken)
 	{
-		lock (_lock)
+		if (_started)
 		{
-			if (_started)
-			{
-				throw new InvalidOperationException("The server is already started.");
-			}
-
-			_listener = StartingInfo.LocalAddress == IPAddress.IPv6Any
-				? TcpListener.Create(StartingInfo.Port) // dual stack
-				: new TcpListener(StartingInfo.LocalAddress, StartingInfo.Port);
-			_listener.ExclusiveAddressUse = false;
-			_listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-			_listener.Start();
-			BeginAcceptSocket();
-
-			_started = true;
+			throw new InvalidOperationException("The server is already started.");
 		}
+
+		var keys = await keyManager.GetHostKeysAsync(cancellationToken);
+		foreach (var key in keys)
+		{
+			_hostKey.TryAdd(key.Key, key.Value);
+		}
+
+		SessionStart += sshApplication.SshServerSessionStart;
+		SessionEnd += sshApplication.SshServerSessionEnd;
+
+		_listener = StartingInfo.LocalAddress == IPAddress.IPv6Any
+			? TcpListener.Create(StartingInfo.Port) // dual stack
+			: new TcpListener(StartingInfo.LocalAddress, StartingInfo.Port);
+		_listener.ExclusiveAddressUse = false;
+		_listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+		_listener.Start();
+		BeginAcceptSocket();
+
+		_started = true;
 	}
 
-	public void Stop()
+	public Task StopAsync(CancellationToken cancellationToken)
 	{
 		lock (_lock)
 		{
 			if (!_started)
 			{
-				return;
+				return Task.CompletedTask;
 			}
 
 			_listener.Stop();
@@ -69,12 +79,14 @@ public class SshServer(StartingInfo info) : IDisposable
 				}
 			}
 		}
+
+		return Task.CompletedTask;
 	}
 
 	public void AddHostKey(string type, string base64EncodedKey)
 	{
-		Contract.Requires(type != null);
-		Contract.Requires(base64EncodedKey != null);
+		ArgumentNullException.ThrowIfNull(type, nameof(type));
+		ArgumentNullException.ThrowIfNull(type, nameof(base64EncodedKey));
 		_hostKey.TryAdd(type, base64EncodedKey);
 	}
 
@@ -150,7 +162,6 @@ public class SshServer(StartingInfo info) : IDisposable
 		{
 			if (disposing)
 			{
-				Stop();
 				_listener.Dispose();
 			}
 

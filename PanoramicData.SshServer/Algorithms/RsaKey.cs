@@ -9,7 +9,7 @@ public class RsaKey(string key = null) : PublicKeyAlgorithm(key)
 
 	public override string Name => "rsa-sha2-256";
 
-	public override void ImportKey(byte[] bytes) => _algorithm.ImportRSAPrivateKey(bytes, out var bytesRead);
+	public override void ImportKey(byte[] bytes) => _algorithm.ImportRSAPrivateKey(bytes, out var _);
 
 	public override byte[] ExportKey() => _algorithm.ExportCspBlob(true);
 

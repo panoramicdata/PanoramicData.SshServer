@@ -20,7 +20,7 @@ public sealed class Terminal : IDisposable
 	private readonly FileStream _reader;
 	private bool _disposedValue;
 
-	public Terminal(string command, int windowWidth, int windowHeight)
+	public Terminal(string command, uint windowWidth, uint windowHeight)
 	{
 		_inputPipe = new PseudoConsolePipe();
 		_outputPipe = new PseudoConsolePipe();

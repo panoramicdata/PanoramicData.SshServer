@@ -18,7 +18,7 @@ internal sealed class PseudoConsole : IDisposable
 		Handle = handle;
 	}
 
-	internal static PseudoConsole Create(SafeFileHandle inputReadSide, SafeFileHandle outputWriteSide, int width, int height)
+	internal static PseudoConsole Create(SafeFileHandle inputReadSide, SafeFileHandle outputWriteSide, uint width, uint height)
 	{
 		var createResult = CreatePseudoConsole(
 			new COORD { X = (short)width, Y = (short)height },
@@ -32,5 +32,5 @@ internal sealed class PseudoConsole : IDisposable
 		return new PseudoConsole(hPC);
 	}
 
-	public void Dispose() => ClosePseudoConsole(Handle);
+	public void Dispose() => _ = ClosePseudoConsole(Handle);
 }

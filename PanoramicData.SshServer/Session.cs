@@ -14,7 +14,7 @@ using System.Threading;
 
 namespace PanoramicData.SshServer;
 
-public partial class Session : IDynamicInvoker
+public partial class Session
 {
 	private const byte CarriageReturn = 0x0d;
 	private const byte LineFeed = 0x0a;
@@ -56,6 +56,21 @@ public partial class Session : IDynamicInvoker
 
 	public byte[] ExchangeHash { get; private set; }
 
+	private readonly ConcurrentDictionary<uint, TerminalSize> _terminalSizes = new();
+
+	public TerminalSize GetTerminalSize(uint serverChannelId)
+	{
+		if (!_terminalSizes.TryGetValue(serverChannelId, out var size))
+		{
+			_terminalSizes[serverChannelId] = size = new TerminalSize(80, 25, 640, 480);
+		}
+
+		return size;
+	}
+
+	public void SetTerminalSize(uint serverChannelId, TerminalSize size)
+		=> _terminalSizes[serverChannelId] = size;
+
 	public T GetService<T>() where T : SshService => (T)_services.FirstOrDefault(x => x is T);
 
 	static Session()
@@ -67,6 +82,7 @@ public partial class Session : IDynamicInvoker
 		_keyExchangeAlgorithms.Add("diffie-hellman-group1-sha1", () => new DiffieHellmanGroupSha1(new DiffieHellman(1024)));
 
 		_publicKeyAlgorithms.Add("rsa-sha2-256", x => new RsaKey(x));
+		_publicKeyAlgorithms.Add("ssh-dss", x => new DssKey(x));
 
 		_encryptionAlgorithms.Add("aes256-ctr", () => new CipherInfo(Aes.Create(), 256, CipherModeEx.CTR));
 		_encryptionAlgorithms.Add("aes256-cbc", () => new CipherInfo(Aes.Create(), 256, CipherModeEx.CBC));
@@ -599,7 +615,7 @@ public partial class Session : IDynamicInvoker
 		SendMessage(new NewKeysMessage());
 	}
 
-	private void HandleMessage(NewKeysMessage message)
+	private void HandleMessage(NewKeysMessage _)
 	{
 		_hasBlockedMessagesWaitHandle.Reset();
 
@@ -615,10 +631,7 @@ public partial class Session : IDynamicInvoker
 		_hasBlockedMessagesWaitHandle.Set();
 	}
 
-	private void HandleMessage(UnimplementedMessage _)
-	{
-		// Nothing to do here
-	}
+	private static void HandleMessage(UnimplementedMessage _) { }
 
 	private void HandleMessage(ServiceRequestMessage message)
 	{

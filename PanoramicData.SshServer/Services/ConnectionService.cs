@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace PanoramicData.SshServer.Services;
 
-public class ConnectionService : SshService, IDynamicInvoker
+public class ConnectionService : SshService
 {
 	private readonly Lock _lock = new();
 	private readonly List<Channel> _channels = [];
@@ -51,12 +51,14 @@ public class ConnectionService : SshService, IDynamicInvoker
 
 	internal void HandleMessageCore(ConnectionServiceMessage message)
 	{
-		if (message is ChannelWindowAdjustMessage)
+		if (message is ChannelWindowAdjustMessage channelWindowAdjustMessage)
 		{
-			this.InvokeHandleMessage(message);
+			HandleMessage(channelWindowAdjustMessage);
 		}
 		else
-		{ _messageQueue.Add(message); }
+		{
+			_messageQueue.Add(message);
+		}
 	}
 
 	private void MessageLoop()
@@ -66,7 +68,29 @@ public class ConnectionService : SshService, IDynamicInvoker
 			while (true)
 			{
 				var message = _messageQueue.Take(_messageCts.Token);
-				this.InvokeHandleMessage(message);
+				switch (message)
+				{
+					case ChannelOpenMessage channelOpenMessage:
+						HandleMessage(channelOpenMessage);
+						break;
+					case ChannelRequestMessage channelRequestMessage:
+						HandleMessage(channelRequestMessage);
+						break;
+					case ChannelDataMessage channelDataMessage:
+						HandleMessage(channelDataMessage);
+						break;
+					case ChannelEofMessage channelEofMessage:
+						HandleMessage(channelEofMessage);
+						break;
+					case ChannelCloseMessage channelCloseMessage:
+						HandleMessage(channelCloseMessage);
+						break;
+					case ShouldIgnoreMessage shouldIgnoreMessage:
+						HandleMessage(shouldIgnoreMessage);
+						break;
+					default:
+						throw new SshConnectionException(string.Format("Unknown message type: {0}.", message.GetType().Name));
+				}
 			}
 		}
 		catch (OperationCanceledException)
@@ -101,7 +125,7 @@ public class ConnectionService : SshService, IDynamicInvoker
 		}
 	}
 
-	private void HandleMessage(ShouldIgnoreMessage _)
+	private static void HandleMessage(ShouldIgnoreMessage _)
 	{
 	}
 
@@ -296,16 +320,6 @@ public class ConnectionService : SshService, IDynamicInvoker
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
 		WindowChange?.Invoke(_session, new WindowChangeArgs(channel, message.WidthColumns, message.HeightRows, message.WidthPixels, message.HeightPixels));
-	}
-
-	private T FindChannelByClientId<T>(uint id) where T : Channel
-	{
-		lock (_lock)
-		{
-			return _channels.FirstOrDefault(x => x.ClientChannelId == id) is not T channel
-				? throw new SshConnectionException(string.Format("Invalid client channel id {0}.", id), DisconnectReason.ProtocolError)
-				: channel;
-		}
 	}
 
 	private T FindChannelByServerId<T>(uint id) where T : Channel
