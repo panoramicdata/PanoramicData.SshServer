@@ -6,7 +6,7 @@ namespace PanoramicData.SshServer.Services;
 
 public class UserAuthService(Session session) : SshService(session)
 {
-	public event EventHandler<UserauthArgs> Userauth;
+	public event EventHandler<UserAuthArgs> UserAuth;
 
 	public event EventHandler<string> Succeed;
 
@@ -55,10 +55,10 @@ public class UserAuthService(Session session) : SshService(session)
 	{
 		var verifed = false;
 
-		var args = new UserauthArgs(_session, message.Username, message.Password);
-		if (Userauth != null)
+		var args = new UserAuthArgs(_session, message.Username, message.Password);
+		if (UserAuth != null)
 		{
-			Userauth(this, args);
+			UserAuth(this, args);
 			verifed = args.Result;
 		}
 
@@ -86,8 +86,8 @@ public class UserAuthService(Session session) : SshService(session)
 			var keyAlg = value(null);
 			keyAlg.LoadKeyAndCertificatesData(message.PublicKey);
 
-			var args = new UserauthArgs(_session, message.Username, message.KeyAlgorithmName, keyAlg.GetFingerprint(), message.PublicKey);
-			Userauth?.Invoke(this, args);
+			var args = new UserAuthArgs(_session, message.Username, message.KeyAlgorithmName, keyAlg.GetFingerprint(), message.PublicKey);
+			UserAuth?.Invoke(this, args);
 			verifed = args.Result;
 
 			if (!verifed)

@@ -4,7 +4,7 @@ namespace PanoramicData.SshServer.Services;
 
 public class CommandRequestedArgs
 {
-	public CommandRequestedArgs(SessionChannel channel, string type, string command, UserauthArgs userauthArgs)
+	public CommandRequestedArgs(SessionChannel channel, string type, string command, UserAuthArgs userauthArgs)
 	{
 		Contract.Requires(channel != null);
 		Contract.Requires(command != null);
@@ -22,5 +22,5 @@ public class CommandRequestedArgs
 
 	public string CommandText { get; private set; }
 
-	public UserauthArgs AttachedUserauthArgs { get; private set; }
+	public UserAuthArgs AttachedUserauthArgs { get; private set; }
 }

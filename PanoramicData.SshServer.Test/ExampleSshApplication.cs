@@ -61,7 +61,7 @@ internal class ExampleSshApplication(
 		{
 			case UserAuthService userAuthService:
 				{
-					userAuthService.Userauth += Service_Userauth;
+					userAuthService.UserAuth += UserAuth;
 					break;
 				}
 
@@ -153,7 +153,7 @@ internal class ExampleSshApplication(
 			e.Value);
 	}
 
-	private void Service_Userauth(object userAuthServiceObject, UserauthArgs userAuthArgs)
+	private void UserAuth(object userAuthServiceObject, UserAuthArgs userAuthArgs)
 	{
 		var userAuthService = userAuthServiceObject as UserAuthService
 			?? throw new InvalidOperationException($"Expected {nameof(UserAuthService)}.  Received {userAuthServiceObject.GetType().Name}");

@@ -4,7 +4,7 @@ namespace PanoramicData.SshServer.Services;
 
 public class TcpRequestArgs
 {
-	public TcpRequestArgs(SessionChannel channel, string host, int port, string originatorIP, int originatorPort, UserauthArgs userauthArgs)
+	public TcpRequestArgs(SessionChannel channel, string host, int port, string originatorIP, int originatorPort, UserAuthArgs userauthArgs)
 	{
 		Contract.Requires(channel != null);
 		Contract.Requires(host != null);
@@ -23,5 +23,5 @@ public class TcpRequestArgs
 	public int Port { get; private set; }
 	public string OriginatorIP { get; private set; }
 	public int OriginatorPort { get; private set; }
-	public UserauthArgs AttachedUserauthArgs { get; private set; }
+	public UserAuthArgs AttachedUserauthArgs { get; private set; }
 }

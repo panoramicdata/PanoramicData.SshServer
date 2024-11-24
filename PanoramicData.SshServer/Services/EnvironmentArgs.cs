@@ -4,7 +4,7 @@ namespace PanoramicData.SshServer.Services;
 
 public class EnvironmentArgs
 {
-	public EnvironmentArgs(SessionChannel channel, string name, string value, UserauthArgs userauthArgs)
+	public EnvironmentArgs(SessionChannel channel, string name, string value, UserAuthArgs userauthArgs)
 	{
 		Contract.Requires(channel != null);
 		Contract.Requires(name != null);
@@ -20,5 +20,5 @@ public class EnvironmentArgs
 	public SessionChannel Channel { get; private set; }
 	public string Name { get; private set; }
 	public string Value { get; private set; }
-	public UserauthArgs AttachedUserauthArgs { get; private set; }
+	public UserAuthArgs AttachedUserauthArgs { get; private set; }
 }

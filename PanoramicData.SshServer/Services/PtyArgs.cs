@@ -4,7 +4,7 @@ namespace PanoramicData.SshServer.Services;
 
 public class PtyArgs
 {
-	public PtyArgs(SessionChannel channel, string terminal, uint heightPx, uint heightRows, uint widthPx, uint widthChars, string modes, UserauthArgs userauthArgs)
+	public PtyArgs(SessionChannel channel, string terminal, uint heightPx, uint heightRows, uint widthPx, uint widthChars, string modes, UserAuthArgs userauthArgs)
 	{
 		Contract.Requires(channel != null);
 		Contract.Requires(terminal != null);
@@ -29,5 +29,5 @@ public class PtyArgs
 	public uint WidthPx { get; private set; }
 	public uint WidthChars { get; private set; }
 	public string Modes { get; private set; }
-	public UserauthArgs AttachedUserauthArgs { get; private set; }
+	public UserAuthArgs AttachedUserauthArgs { get; private set; }
 }

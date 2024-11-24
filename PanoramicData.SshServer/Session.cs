@@ -29,6 +29,8 @@ public partial class Session
 	internal static readonly Dictionary<string, Func<HmacInfo>> _hmacAlgorithms = [];
 	internal static readonly Dictionary<string, Func<CompressionAlgorithm>> _compressionAlgorithms = [];
 
+	private readonly ConcurrentDictionary<string, object?> _sessionVariables = [];
+
 	private readonly Lock _locker = new();
 	private readonly Socket _socket;
 #if DEBUG
@@ -740,7 +742,7 @@ public partial class Session
 		return alg.ComputeHash(worker.ToByteArray());
 	}
 
-	internal SshService? RegisterService(string serviceName, UserauthArgs? auth = null)
+	internal SshService? RegisterService(string serviceName, UserAuthArgs? auth = null)
 	{
 		SshService? service = null;
 		switch (serviceName)
@@ -778,21 +780,37 @@ public partial class Session
 
 	private class ExchangeContext
 	{
-		public string KeyExchange;
-		public string PublicKey;
-		public string ClientEncryption;
-		public string ServerEncryption;
-		public string ClientHmac;
-		public string ServerHmac;
-		public string ClientCompression;
-		public string ServerCompression;
+		public string? KeyExchange;
+		public string? PublicKey;
+		public string? ClientEncryption;
+		public string? ServerEncryption;
+		public string? ClientHmac;
+		public string? ServerHmac;
+		public string? ClientCompression;
+		public string? ServerCompression;
 
-		public byte[] ClientKexInitPayload;
-		public byte[] ServerKexInitPayload;
+		public byte[]? ClientKexInitPayload;
+		public byte[]? ServerKexInitPayload;
 
-		public Algorithms NewAlgorithms;
+		public Algorithms? NewAlgorithms;
 	}
 
 	[GeneratedRegex("SSH-2.0-.+")]
 	private static partial Regex SshVersionRegex();
+
+	public bool TryGetSessionVariable<T>(string name, out T value)
+	{
+		if (_sessionVariables.TryGetValue(name, out var obj) && obj is T t)
+		{
+			value = t;
+			return true;
+		}
+
+		value = default!;
+
+		return false;
+	}
+
+	public void SetSessionVariable<T>(string name, T value)
+		=> _sessionVariables[name] = value;
 }

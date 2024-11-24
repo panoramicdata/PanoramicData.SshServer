@@ -14,13 +14,13 @@ public class ConnectionService : SshService
 {
 	private readonly Lock _lock = new();
 	private readonly List<Channel> _channels = [];
-	private readonly UserauthArgs? _auth = null;
+	private readonly UserAuthArgs? _auth = null;
 	private readonly BlockingCollection<ConnectionServiceMessage> _messageQueue = new(new ConcurrentQueue<ConnectionServiceMessage>());
 	private readonly CancellationTokenSource _messageCts = new();
 
 	private int _serverChannelCounter = -1;
 
-	public ConnectionService(Session session, UserauthArgs auth)
+	public ConnectionService(Session session, UserAuthArgs auth)
 		: base(session)
 	{
 		Contract.Requires(auth is not null);
