@@ -45,8 +45,8 @@ public class SshDataWorker : IDisposable
 
 	public void Write(string str, Encoding encoding)
 	{
-		Contract.Requires(str != null);
-		Contract.Requires(encoding != null);
+		Contract.Requires(str is not null);
+		Contract.Requires(encoding is not null);
 
 		var bytes = encoding.GetBytes(str);
 		WriteBinary(bytes);
@@ -54,7 +54,7 @@ public class SshDataWorker : IDisposable
 
 	public void WriteMpint(byte[] data)
 	{
-		Contract.Requires(data != null);
+		ArgumentNullException.ThrowIfNull(data);
 
 		if (data.Length == 1 && data[0] == 0)
 		{
@@ -80,14 +80,14 @@ public class SshDataWorker : IDisposable
 
 	public void Write(byte[] data)
 	{
-		Contract.Requires(data != null);
+		ArgumentNullException.ThrowIfNull(data);
 
 		_ms.Write(data, 0, data.Length);
 	}
 
 	public void WriteBinary(byte[] buffer)
 	{
-		Contract.Requires(buffer != null);
+		ArgumentNullException.ThrowIfNull(buffer);
 
 		Write((uint)buffer.Length);
 		_ms.Write(buffer, 0, buffer.Length);
@@ -95,7 +95,7 @@ public class SshDataWorker : IDisposable
 
 	public void WriteBinary(byte[] buffer, int offset, int count)
 	{
-		Contract.Requires(buffer != null);
+		ArgumentNullException.ThrowIfNull(buffer);
 
 		Write((uint)count);
 		_ms.Write(buffer, offset, count);
@@ -131,7 +131,7 @@ public class SshDataWorker : IDisposable
 
 	public string ReadString(Encoding encoding)
 	{
-		Contract.Requires(encoding != null);
+		ArgumentNullException.ThrowIfNull(encoding);
 
 		var bytes = ReadBinary();
 		return encoding.GetString(bytes);

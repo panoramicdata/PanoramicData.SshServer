@@ -24,12 +24,11 @@ partial class Program
 		var fileInfo = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), appSettingsPath));
 		var fileExists = fileInfo.Exists;
 
-
 		// Build configuration
 		var configuration = new ConfigurationBuilder()
 			.SetBasePath(Directory.GetCurrentDirectory())
 #if DEBUG
-			.AddJsonFile(fileInfo.FullName, optional: false, reloadOnChange: true)
+                .AddJsonFile(fileInfo.FullName, optional: false, reloadOnChange: true)
 #else
 			.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
 #endif

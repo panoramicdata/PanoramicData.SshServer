@@ -9,17 +9,17 @@ public class SshServerConfiguration
 	/// - "IPv6Any" to listen dual stack
 	/// - "Any" to listen on all network interfaces.
 	/// </summary>
-	public required string LocalAddress { get; init; }
+	public string LocalAddress { get; set; } = string.Empty;
 
 	/// <summary>
 	/// The port on which the SSH server should listen.
 	/// You probably want to use 22 in direct mode, or 2222 with port mapping in a docker environment.
 	/// </summary>
-	public required int Port { get; init; }
+	public int Port { get; set; }
 
 	/// <summary>
 	///	The server banner to display to the client.
 	///	This is typically the SSH server software version.
 	///	It should be in the format "SSH-2.0-software".
-	public required string ServerBanner { get; init; }
+	public string ServerBanner { get; set; } = string.Empty;
 }

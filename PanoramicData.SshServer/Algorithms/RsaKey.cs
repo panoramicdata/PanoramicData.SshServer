@@ -3,7 +3,7 @@ using System.Text;
 
 namespace PanoramicData.SshServer.Algorithms;
 
-public class RsaKey(string key = null) : PublicKeyAlgorithm(key)
+public class RsaKey(string? key = null) : PublicKeyAlgorithm(key)
 {
 	private readonly RSACryptoServiceProvider _algorithm = new();
 

@@ -3,7 +3,7 @@ using System.Text;
 
 namespace PanoramicData.SshServer.Algorithms;
 
-public class DssKey(string key = null) : PublicKeyAlgorithm(key)
+public class DssKey(string? key = null) : PublicKeyAlgorithm(key)
 {
 	private readonly DSACryptoServiceProvider _algorithm = new();
 

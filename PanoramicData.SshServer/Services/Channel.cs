@@ -50,7 +50,7 @@ public abstract class Channel
 
 	public void SendData(byte[] data)
 	{
-		Contract.Requires(data != null);
+		ArgumentNullException.ThrowIfNull(data);
 
 		if (data.Length == 0)
 		{
@@ -64,7 +64,7 @@ public abstract class Channel
 
 		var total = (uint)data.Length;
 		var offset = 0L;
-		byte[] buf = null;
+		byte[]? buf = null;
 		do
 		{
 			var packetSize = Math.Min(Math.Min(ClientWindowSize, ClientMaxPacketSize), total);

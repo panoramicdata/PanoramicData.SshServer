@@ -24,7 +24,7 @@ public partial class Session
 
 	private static readonly Dictionary<byte, Type> _messagesMetadata;
 	internal static readonly Dictionary<string, Func<KexAlgorithm>> _keyExchangeAlgorithms = [];
-	internal static readonly Dictionary<string, Func<string, PublicKeyAlgorithm>> _publicKeyAlgorithms = [];
+	internal static readonly Dictionary<string, Func<string?, PublicKeyAlgorithm>> _publicKeyAlgorithms = [];
 	internal static readonly Dictionary<string, Func<CipherInfo>> _encryptionAlgorithms = [];
 	internal static readonly Dictionary<string, Func<HmacInfo>> _hmacAlgorithms = [];
 	internal static readonly Dictionary<string, Func<CompressionAlgorithm>> _compressionAlgorithms = [];
@@ -42,8 +42,8 @@ public partial class Session
 	private uint _inboundPacketSequence;
 	private uint _outboundFlow;
 	private uint _inboundFlow;
-	private Algorithms _algorithms = null;
-	private ExchangeContext _exchangeContext = null;
+	private Algorithms? _algorithms = null;
+	private ExchangeContext? _exchangeContext = null;
 	private readonly List<SshService> _services = [];
 	private readonly ConcurrentQueue<Message> _blockedMessages = new();
 	private readonly ManualResetEvent _hasBlockedMessagesWaitHandle = new(true);
@@ -71,7 +71,7 @@ public partial class Session
 	public void SetTerminalSize(uint serverChannelId, TerminalSize size)
 		=> _terminalSizes[serverChannelId] = size;
 
-	public T GetService<T>() where T : SshService => (T)_services.FirstOrDefault(x => x is T);
+	public T? GetService<T>() where T : SshService => (T?)_services.FirstOrDefault(x => x is T);
 
 	static Session()
 	{
@@ -93,7 +93,7 @@ public partial class Session
 		_compressionAlgorithms.Add("none", () => new NoCompression());
 
 		_messagesMetadata = (from t in typeof(Message).Assembly.GetTypes()
-							 let attrib = (MessageAttribute)t.GetCustomAttributes(typeof(MessageAttribute), false).FirstOrDefault()
+							 let attrib = (MessageAttribute?)t.GetCustomAttributes(typeof(MessageAttribute), false).FirstOrDefault()
 							 where attrib != null
 							 select new { attrib.Number, Type = t })
 							 .ToDictionary(x => x.Number, x => x.Type);
@@ -101,8 +101,9 @@ public partial class Session
 
 	public Session(Socket socket, Dictionary<string, string> hostKey, string serverBanner)
 	{
-		Contract.Requires(socket != null);
-		Contract.Requires(hostKey != null);
+		ArgumentNullException.ThrowIfNull(socket, nameof(socket));
+		ArgumentNullException.ThrowIfNull(hostKey, nameof(hostKey));
+		ArgumentNullException.ThrowIfNull(serverBanner, nameof(serverBanner));
 
 		_socket = socket;
 		_hostKey = hostKey.ToDictionary(s => s.Key, s => s.Value);
@@ -322,12 +323,14 @@ public partial class Session
 	#region Message operations
 	private Message ReceiveMessage()
 	{
-		var useAlg = _algorithms != null;
+		var useAlg = _algorithms is not null;
 
 		var blockSize = (byte)(useAlg ? Math.Max(8, _algorithms.ClientEncryption.BlockBytesSize) : 8);
 		var firstBlock = SocketRead(blockSize);
 		if (useAlg)
+		{
 			firstBlock = _algorithms.ClientEncryption.Transform(firstBlock);
+		}
 
 		var packetLength = firstBlock[0] << 24 | firstBlock[1] << 16 | firstBlock[2] << 8 | firstBlock[3];
 		var paddingLength = firstBlock[4];
@@ -335,7 +338,9 @@ public partial class Session
 
 		var followingBlocks = SocketRead(bytesToRead);
 		if (useAlg)
+		{
 			followingBlocks = _algorithms.ClientEncryption.Transform(followingBlocks);
+		}
 
 		var fullPacket = firstBlock.Concat(followingBlocks).ToArray();
 		var data = fullPacket.Skip(5).Take(packetLength - paddingLength).ToArray();
@@ -354,11 +359,13 @@ public partial class Session
 		var typeNumber = data[0];
 		var implemented = _messagesMetadata.ContainsKey(typeNumber);
 		var message = implemented
-			? (Message)Activator.CreateInstance(_messagesMetadata[typeNumber])
+			? Activator.CreateInstance(_messagesMetadata[typeNumber]) as Message ?? throw new InvalidOperationException()
 			: new UnknownMessage { SequenceNumber = _inboundPacketSequence, UnknownMessageType = typeNumber };
 
 		if (implemented)
+		{
 			message.Load(data);
+		}
 
 		lock (_locker)
 		{
@@ -693,7 +700,7 @@ public partial class Session
 	{
 		var keyBuffer = new byte[blockSize];
 		var keyBufferIndex = 0;
-		byte[] currentHash = null;
+		byte[]? currentHash = null;
 
 		while (keyBufferIndex < blockSize)
 		{
@@ -733,11 +740,9 @@ public partial class Session
 		return alg.ComputeHash(worker.ToByteArray());
 	}
 
-	internal SshService RegisterService(string serviceName, UserauthArgs auth = null)
+	internal SshService? RegisterService(string serviceName, UserauthArgs? auth = null)
 	{
-		Contract.Requires(serviceName != null);
-
-		SshService service = null;
+		SshService? service = null;
 		switch (serviceName)
 		{
 			case "ssh-userauth":
@@ -750,7 +755,7 @@ public partial class Session
 				break;
 		}
 
-		if (service != null)
+		if (service is not null)
 		{
 			ServiceRegistered?.Invoke(this, service);
 			_services.Add(service);

@@ -8,7 +8,7 @@ namespace PanoramicData.SshServer.Algorithms;
 [ContractClass(typeof(PublicKeyAlgorithmContract))]
 public abstract class PublicKeyAlgorithm
 {
-	public PublicKeyAlgorithm(string key)
+	public PublicKeyAlgorithm(string? key)
 	{
 		if (!string.IsNullOrEmpty(key))
 		{

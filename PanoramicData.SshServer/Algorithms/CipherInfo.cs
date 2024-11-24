@@ -9,9 +9,8 @@ public class CipherInfo
 {
 	public CipherInfo(SymmetricAlgorithm algorithm, int keySize, CipherModeEx mode)
 	{
-		Contract.Requires(algorithm != null);
-		Contract.Requires(algorithm.LegalKeySizes.Any(x =>
-			x.MinSize <= keySize && keySize <= x.MaxSize && keySize % x.SkipSize == 0));
+		ArgumentNullException.ThrowIfNull(algorithm, nameof(algorithm));
+		Contract.Requires(algorithm.LegalKeySizes.Any(x => x.MinSize <= keySize && keySize <= x.MaxSize && keySize % x.SkipSize == 0));
 
 		algorithm.KeySize = keySize;
 		KeySize = algorithm.KeySize;

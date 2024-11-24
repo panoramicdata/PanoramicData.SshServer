@@ -14,7 +14,7 @@ public class ConnectionService : SshService
 {
 	private readonly Lock _lock = new();
 	private readonly List<Channel> _channels = [];
-	private readonly UserauthArgs _auth = null;
+	private readonly UserauthArgs? _auth = null;
 	private readonly BlockingCollection<ConnectionServiceMessage> _messageQueue = new(new ConcurrentQueue<ConnectionServiceMessage>());
 	private readonly CancellationTokenSource _messageCts = new();
 
@@ -23,7 +23,7 @@ public class ConnectionService : SshService
 	public ConnectionService(Session session, UserauthArgs auth)
 		: base(session)
 	{
-		Contract.Requires(auth != null);
+		Contract.Requires(auth is not null);
 
 		_auth = auth;
 

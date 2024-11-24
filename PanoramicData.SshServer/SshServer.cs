@@ -20,16 +20,16 @@ public class SshServer(
 	private readonly List<Session> _sessions = [];
 	private readonly Dictionary<string, string> _hostKey = [];
 	private bool _started;
-	private TcpListener _listener = null;
+	private TcpListener? _listener = null;
 	private bool _disposedValue;
 
 	public Guid Id { get; } = Guid.NewGuid();
 
 	private readonly SshServerConfiguration _config = (options ?? throw new ArgumentNullException(nameof(options))).Value;
 
-	public event EventHandler<Session> SessionStart;
-	public event EventHandler<Session> SessionEnd;
-	public event EventHandler<Exception> ExceptionRaised;
+	public event EventHandler<Session>? SessionStart;
+	public event EventHandler<Session>? SessionEnd;
+	public event EventHandler<Exception>? ExceptionRaised;
 
 	public async Task StartAsync(CancellationToken cancellationToken)
 	{
@@ -71,7 +71,7 @@ public class SshServer(
 				return Task.CompletedTask;
 			}
 
-			_listener.Stop();
+			_listener?.Stop();
 			_started = false;
 
 			foreach (var session in _sessions.ToArray())
@@ -100,7 +100,7 @@ public class SshServer(
 	{
 		try
 		{
-			_listener.BeginAcceptSocket(AcceptSocket, null);
+			_listener?.BeginAcceptSocket(AcceptSocket, null);
 		}
 		catch (ObjectDisposedException)
 		{
@@ -109,12 +109,17 @@ public class SshServer(
 		catch
 		{
 			if (_started)
-				BeginAcceptSocket();
+			{ BeginAcceptSocket(); }
 		}
 	}
 
 	private void AcceptSocket(IAsyncResult ar)
 	{
+		if (_listener is null)
+		{
+			throw new InvalidOperationException("The listener is null.");
+		}
+
 		try
 		{
 			var socket = _listener.EndAcceptSocket(ar);
@@ -168,7 +173,7 @@ public class SshServer(
 		{
 			if (disposing)
 			{
-				_listener.Dispose();
+				_listener?.Dispose();
 			}
 
 			_disposedValue = true;
@@ -177,7 +182,7 @@ public class SshServer(
 
 	public void Dispose()
 	{
-		// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		// Do not change this code. Put clean-up code in 'Dispose(bool disposing)' method
 		Dispose(disposing: true);
 		GC.SuppressFinalize(this);
 	}
