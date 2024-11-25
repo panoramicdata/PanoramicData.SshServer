@@ -129,7 +129,7 @@ public class SshServer(
 					socket,
 					_hostKey,
 					_config.ServerBanner,
-					TimeSpan.FromSeconds(_config.InactivityTimeoutSeconds ?? int.MaxValue));
+					TimeSpan.FromSeconds(_config.InactivityTimeoutSeconds ?? TimeSpan.FromDays(1).TotalSeconds));
 
 				session.Disconnected += (ss, ee) =>
 				{
