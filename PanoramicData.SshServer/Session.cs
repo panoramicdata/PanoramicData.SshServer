@@ -33,7 +33,7 @@ public partial class Session
 
 	private readonly Lock _locker = new();
 	private readonly Socket _socket;
-	private readonly TimeSpan _timeout;
+	private readonly TimeSpan _inactivityTimeout;
 	private readonly Dictionary<string, string> _hostKey;
 
 	private uint _outboundPacketSequence;
@@ -97,7 +97,7 @@ public partial class Session
 							 .ToDictionary(x => x.Number, x => x.Type);
 	}
 
-	public Session(Socket socket, Dictionary<string, string> hostKey, string serverBanner, TimeSpan timeout)
+	public Session(Socket socket, Dictionary<string, string> hostKey, string serverBanner, TimeSpan inactivityTimeout)
 	{
 		ArgumentNullException.ThrowIfNull(socket, nameof(socket));
 		ArgumentNullException.ThrowIfNull(hostKey, nameof(hostKey));
@@ -105,7 +105,9 @@ public partial class Session
 
 		_socket = socket;
 		_hostKey = hostKey.ToDictionary(s => s.Key, s => s.Value);
-		_timeout = timeout;
+		_inactivityTimeout = inactivityTimeout > TimeSpan.FromDays(365)
+			? throw new ArgumentOutOfRangeException(nameof(inactivityTimeout), "Inactivity Timeout must be less than 1 year.")
+			: inactivityTimeout;
 		ServerVersion = serverBanner;
 	}
 
@@ -187,7 +189,7 @@ public partial class Session
 		_socket.LingerState = new LingerOption(enable: false, seconds: 0);
 		_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, socketBufferSize);
 		_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, socketBufferSize);
-		_socket.ReceiveTimeout = (int)_timeout.TotalMilliseconds;
+		_socket.ReceiveTimeout = (int)_inactivityTimeout.TotalMilliseconds;
 	}
 
 	private string SocketReadProtocolVersion()
@@ -252,7 +254,7 @@ public partial class Session
 
 				if (len == 0 && _socket.Available == 0)
 				{
-					if (msSinceLastData >= _timeout.TotalMilliseconds)
+					if (msSinceLastData >= _inactivityTimeout.TotalMilliseconds)
 					{
 						throw new SshConnectionException("Connection lost", DisconnectReason.ConnectionLost);
 					}
@@ -312,9 +314,9 @@ public partial class Session
 
 	private void WaitHandle(IAsyncResult ar)
 	{
-		if (!ar.AsyncWaitHandle.WaitOne(_timeout))
+		if (!ar.AsyncWaitHandle.WaitOne(_inactivityTimeout))
 			throw new SshConnectionException(string.Format("Socket operation has timed out after {0:F0} milliseconds.",
-				_timeout.TotalMilliseconds),
+				_inactivityTimeout.TotalMilliseconds),
 				DisconnectReason.ConnectionLost);
 	}
 	#endregion
