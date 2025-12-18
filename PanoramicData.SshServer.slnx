@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorConfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="global.json" />
+    <File Path="LICENSE.md" />
+    <File Path="nuget-key.txt" />
+    <File Path="README.md" />
+    <File Path="version.json" />
+  </Folder>
+  <Project Path="PanoramicData.SshServer.Test/ExampleApp.csproj" />
+  <Project Path="PanoramicData.SshServer/PanoramicData.SshServer.csproj" />
+</Solution>
