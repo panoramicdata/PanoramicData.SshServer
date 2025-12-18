@@ -81,7 +81,13 @@ if (-not $SkipTests) {
 
 # Step 5: Publish to NuGet.org
 Write-Host "Building and packing..." -ForegroundColor Cyan
-dotnet pack "PanoramicData.SshServer\PanoramicData.SshServer.csproj" -c Release
+dotnet build "PanoramicData.SshServer\PanoramicData.SshServer.csproj" -c Release
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Failed to build the project."
+    exit 1
+}
+
+dotnet pack "PanoramicData.SshServer\PanoramicData.SshServer.csproj" -c Release --no-build
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to pack the project."
     exit 1
