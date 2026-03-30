@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace ExampleApp;
 
-internal class ExampleKeyManager : IKeyManager
+internal sealed class ExampleKeyManager : IKeyManager
 {
 	public async Task<Dictionary<string, string>> GetHostKeysAsync(CancellationToken cancellationToken)
-		=> new Dictionary<string, string>
+		=> new()
 		{
 			{ "rsa-sha2-256", await GetPrivateKeyBase64Async("rsa-sha2-256", cancellationToken) },
 			{ "ssh-dss", await GetPrivateKeyBase64Async("ssh-dss", cancellationToken) },

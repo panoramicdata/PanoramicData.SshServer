@@ -24,13 +24,13 @@ public class DiffieHellman : AsymmetricAlgorithm
 
 	private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
 
-	private BigInteger _p;
-	private BigInteger _g;
-	private BigInteger _x;
+	private readonly BigInteger _p;
+	private readonly BigInteger _g;
+	private readonly BigInteger _x;
 
 	public DiffieHellman(int bitlen)
 	{
-		Contract.Requires(bitlen == 1024 || bitlen == 2048 || bitlen == 4096 || bitlen == 8192);
+		Contract.Requires(bitlen is 1024 or 2048 or 4096 or 8192);
 
 		switch (bitlen)
 		{
@@ -55,7 +55,7 @@ public class DiffieHellman : AsymmetricAlgorithm
 				break;
 
 			default:
-				throw new ArgumentException("bitlen", "bitlen must equal 1024, 2048, 4096, or 8192");
+				throw new ArgumentException("bitlen must equal 1024, 2048, 4096, or 8192", nameof(bitlen));
 		}
 
 		var bytes = new byte[80]; // 80 * 8 = 640 bits
@@ -80,12 +80,12 @@ public class DiffieHellman : AsymmetricAlgorithm
 		return bytes;
 	}
 
-	private BigInteger BytesToBigint(byte[] bytes) => new([.. bytes.Reverse(), .. new byte[] { 0 }]);
+	private static BigInteger BytesToBigint(byte[] bytes) => new([.. bytes.Reverse(), .. new byte[] { 0 }]);
 
-	private byte[] BigintToBytes(BigInteger bigint)
+	private static byte[] BigintToBytes(BigInteger bigint)
 	{
 		var bytes = bigint.ToByteArray();
-		if (bytes.Length > 1 && bytes[bytes.Length - 1] == 0)
+		if (bytes.Length > 1 && bytes[^1] == 0)
 		{
 			return [.. bytes.Reverse().Skip(1)];
 		}

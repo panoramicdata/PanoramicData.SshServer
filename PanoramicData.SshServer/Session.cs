@@ -40,8 +40,8 @@ public partial class Session
 	private uint _inboundPacketSequence;
 	private uint _outboundFlow;
 	private uint _inboundFlow;
-	private Algorithms? _algorithms = null;
-	private ExchangeContext? _exchangeContext = null;
+	private Algorithms? _algorithms;
+	private ExchangeContext? _exchangeContext;
 	private readonly List<SshService> _services = [];
 	private readonly ConcurrentQueue<Message> _blockedMessages = new();
 	private readonly ManualResetEvent _hasBlockedMessagesWaitHandle = new(true);
@@ -765,7 +765,7 @@ public partial class Session
 		return service;
 	}
 
-	private class Algorithms
+	private sealed class Algorithms
 	{
 		public KexAlgorithm KeyExchange;
 		public PublicKeyAlgorithm PublicKey;
@@ -777,7 +777,7 @@ public partial class Session
 		public CompressionAlgorithm ServerCompression;
 	}
 
-	private class ExchangeContext
+	private sealed class ExchangeContext
 	{
 		public string? KeyExchange;
 		public string? PublicKey;

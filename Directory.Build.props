@@ -1,11 +1,15 @@
 <Project>
 	<PropertyGroup>
-		<Company>Panoramic Data Limited</Company>
 		<Authors>Panoramic Data Limited</Authors>
-		<Copyright>Copyright © $([System.DateTime]::Now.Year) Panoramic Data Limited</Copyright>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<Company>Panoramic Data Limited</Company>
+		<Copyright>Copyright © Panoramic Data Limited $([System.DateTime]::Now.Year)</Copyright>
+		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-		<NuGetAuditMode>All</NuGetAuditMode>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<AnalysisMode>All</AnalysisMode>
+		<AnalysisLevel>latest-recommended</AnalysisLevel>
+		<NuGetAuditMode>all</NuGetAuditMode>
 		<!-- Nullable warnings kept as warnings (not errors) for gradual adoption in existing codebase -->
 		<WarningsNotAsErrors>$(WarningsNotAsErrors);CS8600;CS8601;CS8602;CS8603;CS8604;CS8610;CS8618;CS8619;CS8620;CS8622;CS8625;CS8631;CS8634;CS8714;CS8765;CS8767</WarningsNotAsErrors>
 	</PropertyGroup>

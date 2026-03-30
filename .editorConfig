@@ -150,6 +150,25 @@ csharp_style_prefer_top_level_statements = true:silent
 dotnet_diagnostic.CA1050.severity = error
 #dotnet_naming_style.constant_field_style.required_prefix = _ NOPE.
 
+# CA1848: Use the LoggerMessage delegates
+dotnet_diagnostic.CA1848.severity = none
+# CA1873: Avoid unnecessary string evaluation for logging
+dotnet_diagnostic.CA1873.severity = none
+# CA5350: SHA1 is required by SSH protocol (diffie-hellman-group1-sha1)
+dotnet_diagnostic.CA5350.severity = none
+# CA5351: MD5 is required for SSH fingerprint computation
+dotnet_diagnostic.CA5351.severity = none
+# CA5384: DSA is required for SSH DSS key support
+dotnet_diagnostic.CA5384.severity = none
+# CA1305: string.Format locale - SSH protocol messages are not user-facing
+dotnet_diagnostic.CA1305.severity = none
+# CA1051: Protected fields in abstract base classes are part of the library API
+dotnet_diagnostic.CA1051.severity = none
+# CA1001: Disposable ownership patterns are managed via CloseService/ForceClose
+dotnet_diagnostic.CA1001.severity = none
+# CA1711: CipherModeEx is an established name in the codebase
+dotnet_diagnostic.CA1711.severity = none
+
 vsspell_section_id = 24bfe3a339004957ab34f7654481307f
 vsspell_spell_check_as_you_type = true
 vsspell_ignore_words_with_digits = true

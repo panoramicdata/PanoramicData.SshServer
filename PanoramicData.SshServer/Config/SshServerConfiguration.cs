@@ -27,5 +27,5 @@ public class SshServerConfiguration
 	/// The number of seconds of inactivity before the server disconnects the client.
 	/// Leave as null (the default) to never time out
 	/// </summary>
-	public int? InactivityTimeoutSeconds { get; set; } = null;
+	public int? InactivityTimeoutSeconds { get; set; }
 }

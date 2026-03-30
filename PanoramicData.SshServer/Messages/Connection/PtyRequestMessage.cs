@@ -4,12 +4,12 @@ namespace PanoramicData.SshServer.Messages.Connection;
 
 public class PtyRequestMessage : ChannelRequestMessage
 {
-	public string Terminal = "";
-	public uint widthChars = 0;
-	public uint heightRows = 0;
-	public uint widthPx = 0;
-	public uint heightPx = 0;
-	public string modes = "";
+	public string Terminal { get; set; } = "";
+	public uint widthChars { get; set; }
+	public uint heightRows { get; set; }
+	public uint widthPx { get; set; }
+	public uint heightPx { get; set; }
+	public string modes { get; set; } = "";
 
 	protected override void OnLoad(SshDataWorker reader)
 	{

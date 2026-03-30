@@ -12,7 +12,7 @@ public class TcpForwardService(
 {
 	private readonly Socket _socket = new(SocketType.Stream, ProtocolType.Tcp);
 	private readonly List<byte> _blocked = [];
-	private bool _connected = false;
+	private bool _connected;
 
 	public event EventHandler<byte[]> DataReceived;
 	public event EventHandler CloseReceived;

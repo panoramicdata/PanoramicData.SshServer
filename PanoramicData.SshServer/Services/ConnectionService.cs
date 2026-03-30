@@ -14,7 +14,7 @@ public class ConnectionService : SshService
 {
 	private readonly Lock _lock = new();
 	private readonly List<Channel> _channels = [];
-	private readonly UserAuthArgs? _auth = null;
+	private readonly UserAuthArgs? _auth;
 	private readonly BlockingCollection<ConnectionServiceMessage> _messageQueue = new(new ConcurrentQueue<ConnectionServiceMessage>());
 	private readonly CancellationTokenSource _messageCts = new();
 

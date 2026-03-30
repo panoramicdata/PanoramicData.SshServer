@@ -20,7 +20,7 @@ public class SshServer(
 	private readonly List<Session> _sessions = [];
 	private readonly Dictionary<string, string> _hostKey = [];
 	private bool _started;
-	private TcpListener? _listener = null;
+	private TcpListener? _listener;
 	private bool _disposedValue;
 
 	public Guid Id { get; } = Guid.NewGuid();

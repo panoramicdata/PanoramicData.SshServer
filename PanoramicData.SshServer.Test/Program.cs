@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace ExampleApp;
 
+#pragma warning disable CA1852 // Partial Program class cannot be sealed
 partial class Program
 {
 	static async Task Main()

@@ -7,7 +7,7 @@ using PanoramicData.SshServer.Services;
 using System;
 
 namespace ExampleApp;
-internal class ExampleSshApplication(
+internal sealed class ExampleSshApplication(
 	IOptions<ExampleSshApplicationConfiguration> options,
 	ILogger<Program> logger) : ISshApplication
 {

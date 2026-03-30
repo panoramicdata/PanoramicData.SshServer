@@ -14,7 +14,7 @@ internal sealed class Process(Native.ProcessApi.STARTUPINFOEX startupInfo, Nativ
 
 	#region IDisposable Support
 
-	private bool _disposedValue = false; // To detect redundant calls
+	private bool _disposedValue; // To detect redundant calls
 
 	void Dispose(bool disposing)
 	{
