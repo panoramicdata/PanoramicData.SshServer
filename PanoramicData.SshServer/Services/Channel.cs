@@ -76,9 +76,10 @@ public abstract class Channel : IDisposable
 			}
 
 			if (buf == null || packetSize != buf.Length)
-				{
-					buf = new byte[packetSize];
-				}
+			{
+				buf = new byte[packetSize];
+			}
+
 			Array.Copy(data, offset, buf, 0, packetSize);
 
 			msg.Data = buf;

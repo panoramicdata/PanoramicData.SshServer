@@ -6,7 +6,7 @@ namespace ExampleApp.MiniTerm.Native;
 /// <summary>
 /// PInvoke signatures for win32 process api
 /// </summary>
-static class ProcessApi
+static partial class ProcessApi
 {
 	internal const uint EXTENDED_STARTUPINFO_PRESENT = 0x00080000;
 
@@ -92,29 +92,33 @@ static class ProcessApi
 		public static bool operator !=(SECURITY_ATTRIBUTES left, SECURITY_ATTRIBUTES right) => !left.Equals(right);
 	}
 
-	[DllImport("kernel32.dll", SetLastError = true)]
+	[LibraryImport("kernel32.dll", SetLastError = true)]
 	[return: MarshalAs(UnmanagedType.Bool)]
-	internal static extern bool InitializeProcThreadAttributeList(
+	internal static partial bool InitializeProcThreadAttributeList(
 		nint lpAttributeList, int dwAttributeCount, int dwFlags, ref nint lpSize);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
+	[LibraryImport("kernel32.dll", SetLastError = true)]
 	[return: MarshalAs(UnmanagedType.Bool)]
-	internal static extern bool UpdateProcThreadAttribute(
+	internal static partial bool UpdateProcThreadAttribute(
 		nint lpAttributeList, uint dwFlags, nint attribute, nint lpValue,
 		nint cbSize, nint lpPreviousValue, nint lpReturnSize);
 
-	[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+	// LibraryImport cannot be used here: STARTUPINFOEX contains non-blittable string fields (SYSLIB1051)
+#pragma warning disable SYSLIB1054 // Use 'LibraryImportAttribute' instead of 'DllImportAttribute'
+	[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	internal static extern bool CreateProcess(
 		string lpApplicationName, string lpCommandLine, ref SECURITY_ATTRIBUTES lpProcessAttributes,
 		ref SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags,
 		nint lpEnvironment, string lpCurrentDirectory, [In] ref STARTUPINFOEX lpStartupInfo,
 		out PROCESS_INFORMATION lpProcessInformation);
+#pragma warning restore SYSLIB1054
 
-	[DllImport("kernel32.dll", SetLastError = true)]
+	[LibraryImport("kernel32.dll", SetLastError = true)]
 	[return: MarshalAs(UnmanagedType.Bool)]
-	internal static extern bool DeleteProcThreadAttributeList(nint lpAttributeList);
+	internal static partial bool DeleteProcThreadAttributeList(nint lpAttributeList);
 
-	[DllImport("kernel32.dll", SetLastError = true)]
-	internal static extern bool CloseHandle(nint hObject);
+	[LibraryImport("kernel32.dll", SetLastError = true)]
+	[return: MarshalAs(UnmanagedType.Bool)]
+	internal static partial bool CloseHandle(nint hObject);
 }

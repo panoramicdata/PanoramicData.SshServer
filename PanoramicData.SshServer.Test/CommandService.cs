@@ -51,7 +51,7 @@ public class CommandService
 				break;
 
 			var data = bytes.Length != len
-				? bytes.Take(len).ToArray()
+				? [.. bytes.Take(len)]
 				: bytes;
 			DataReceived?.Invoke(this, data);
 		}

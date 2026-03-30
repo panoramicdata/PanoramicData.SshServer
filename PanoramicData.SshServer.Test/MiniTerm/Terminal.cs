@@ -52,7 +52,7 @@ public sealed class Terminal : IDisposable
 					break;
 				}
 
-				DataReceived?.Invoke(this, buf.Take(length).ToArray());
+				DataReceived?.Invoke(this, [.. buf.Take(length)]);
 			}
 
 			CloseReceived?.Invoke(this, 0);
@@ -88,9 +88,6 @@ public sealed class Terminal : IDisposable
 		}
 	}
 
-	public void Dispose()
-	{
-		// Do not change this code. Put clean-up code in 'Dispose(bool disposing)' method
+	public void Dispose() =>
 		Dispose(disposing: true);
-	}
 }
