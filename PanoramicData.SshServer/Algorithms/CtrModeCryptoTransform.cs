@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.Contracts;
+﻿using System;
+using System.Diagnostics.Contracts;
 using System.Security.Cryptography;
 
 namespace PanoramicData.SshServer.Algorithms;
@@ -13,8 +14,9 @@ public class CtrModeCryptoTransform : ICryptoTransform
 
 	public CtrModeCryptoTransform(SymmetricAlgorithm algorithm)
 	{
-		Contract.Requires(algorithm != null);
+		ArgumentNullException.ThrowIfNull(algorithm);
 
+		// ECB mode is intentionally used here as the base cipher for CTR mode implementation
 		algorithm.Mode = CipherMode.ECB;
 		algorithm.Padding = PaddingMode.None;
 
@@ -42,10 +44,15 @@ public class CtrModeCryptoTransform : ICryptoTransform
 			written += _transform.TransformBlock(_iv, 0, bytesPerBlock, _block, 0);
 
 			for (var j = 0; j < bytesPerBlock; j++)
+			{
 				outputBuffer[outputOffset + i + j] = (byte)(_block[j] ^ inputBuffer[inputOffset + i + j]);
+			}
 
 			var k = _iv.Length;
-			while (--k >= 0 && ++_iv[k] == 0) ;
+			while (--k >= 0 && ++_iv[k] == 0)
+			{
+				// Increment IV counter with carry propagation
+			}
 		}
 
 		return written;

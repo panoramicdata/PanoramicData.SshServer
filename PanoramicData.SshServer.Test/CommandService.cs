@@ -7,8 +7,8 @@ namespace ExampleApp;
 
 public class CommandService
 {
-	private Process _process = null;
-	private ProcessStartInfo _startInfo = null;
+	private Process? _process;
+	private readonly ProcessStartInfo _startInfo;
 
 	public CommandService(string command, string args)
 	{
@@ -22,13 +22,14 @@ public class CommandService
 		};
 	}
 
-	public event EventHandler<byte[]> DataReceived;
-	public event EventHandler EofReceived;
-	public event EventHandler<uint> CloseReceived;
+	public event EventHandler<byte[]>? DataReceived;
+	public event EventHandler? EofReceived;
+	public event EventHandler<uint>? CloseReceived;
 
 	public void Start()
 	{
-		_process = Process.Start(_startInfo);
+		_process = Process.Start(_startInfo)
+			?? throw new InvalidOperationException("Failed to start process.");
 		Task.Run(() => MessageLoop());
 	}
 

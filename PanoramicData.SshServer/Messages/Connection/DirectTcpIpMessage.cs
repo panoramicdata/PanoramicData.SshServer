@@ -5,9 +5,9 @@ namespace PanoramicData.SshServer.Messages.Connection;
 
 public class DirectTcpIpMessage : ChannelOpenMessage
 {
-	public string Host { get; private set; }
+	public string Host { get; private set; } = string.Empty;
 	public uint Port { get; private set; }
-	public string OriginatorIPAddress { get; private set; }
+	public string OriginatorIPAddress { get; private set; } = string.Empty;
 	public uint OriginatorPort { get; private set; }
 
 	protected override void OnLoad(SshDataWorker reader)
@@ -15,7 +15,9 @@ public class DirectTcpIpMessage : ChannelOpenMessage
 		base.OnLoad(reader);
 
 		if (ChannelType != "direct-tcpip")
+		{
 			throw new ArgumentException(string.Format("Channel type {0} is not valid.", ChannelType));
+		}
 
 		Host = reader.ReadString(Encoding.ASCII);
 		Port = reader.ReadUInt32();

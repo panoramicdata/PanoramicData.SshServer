@@ -30,8 +30,8 @@ public sealed class Terminal : IDisposable
 		_reader = new FileStream(_outputPipe.ReadSide, FileAccess.Read);
 	}
 
-	public event EventHandler<byte[]> DataReceived;
-	public event EventHandler<uint> CloseReceived;
+	public event EventHandler<byte[]>? DataReceived;
+	public event EventHandler<uint>? CloseReceived;
 
 	/// <summary>
 	/// Start the pseudo console and run the process as shown in 
@@ -48,7 +48,10 @@ public sealed class Terminal : IDisposable
 			{
 				var length = _reader.Read(buf, 0, buf.Length);
 				if (length == 0)
+				{
 					break;
+				}
+
 				DataReceived?.Invoke(this, buf.Take(length).ToArray());
 			}
 
@@ -89,6 +92,5 @@ public sealed class Terminal : IDisposable
 	{
 		// Do not change this code. Put clean-up code in 'Dispose(bool disposing)' method
 		Dispose(disposing: true);
-		GC.SuppressFinalize(this);
 	}
 }

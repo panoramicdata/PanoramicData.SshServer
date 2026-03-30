@@ -23,27 +23,28 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$InformationPreference = 'Continue'
 
 # Step 1: Check for clean git working directory
-Write-Host "Checking for clean git working directory..." -ForegroundColor Cyan
+Write-Information "Checking for clean git working directory..."
 $gitStatus = git status --porcelain
 if ($gitStatus) {
     Write-Error "Git working directory is not clean. Please commit or stash your changes."
     exit 1
 }
-Write-Host "Git working directory is clean." -ForegroundColor Green
+Write-Information "Git working directory is clean."
 
 # Step 2: Determine the Nerdbank git version
-Write-Host "Determining Nerdbank git version..." -ForegroundColor Cyan
+Write-Information "Determining Nerdbank git version..."
 $version = nbgv get-version -v NuGetPackageVersion
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to determine Nerdbank git version. Ensure nbgv is installed (dotnet tool install -g nbgv)."
     exit 1
 }
-Write-Host "Version: $version" -ForegroundColor Green
+Write-Information "Version: $version"
 
 # Step 3: Check that nuget-key.txt exists, has content, and is gitignored
-Write-Host "Checking nuget-key.txt..." -ForegroundColor Cyan
+Write-Information "Checking nuget-key.txt..."
 $nugetKeyPath = Join-Path $PSScriptRoot "nuget-key.txt"
 
 if (-not (Test-Path $nugetKeyPath)) {
@@ -64,23 +65,23 @@ if ($LASTEXITCODE -ne 0) {
     Write-Error "nuget-key.txt is not gitignored. Add it to .gitignore to protect your API key."
     exit 1
 }
-Write-Host "nuget-key.txt is valid and gitignored." -ForegroundColor Green
+Write-Information "nuget-key.txt is valid and gitignored."
 
 # Step 4: Run unit tests (unless -SkipTests is specified)
 if (-not $SkipTests) {
-    Write-Host "Running unit tests..." -ForegroundColor Cyan
+    Write-Information "Running unit tests..."
     dotnet test
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Unit tests failed."
         exit 1
     }
-    Write-Host "Unit tests passed." -ForegroundColor Green
+    Write-Information "Unit tests passed."
 } else {
-    Write-Host "Skipping unit tests." -ForegroundColor Yellow
+    Write-Information "Skipping unit tests."
 }
 
 # Step 5: Publish to NuGet.org
-Write-Host "Building and packing..." -ForegroundColor Cyan
+Write-Information "Building and packing..."
 dotnet build "PanoramicData.SshServer\PanoramicData.SshServer.csproj" -c Release
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to build the project."
@@ -99,12 +100,12 @@ if (-not $nupkgPath) {
     exit 1
 }
 
-Write-Host "Publishing $($nupkgPath.Name) to NuGet.org..." -ForegroundColor Cyan
+Write-Information "Publishing $($nupkgPath.Name) to NuGet.org..."
 dotnet nuget push $nupkgPath.FullName --api-key $nugetKey --source https://api.nuget.org/v3/index.json
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Failed to publish to NuGet.org."
     exit 1
 }
 
-Write-Host "Successfully published $($nupkgPath.Name) to NuGet.org!" -ForegroundColor Green
+Write-Information "Successfully published $($nupkgPath.Name) to NuGet.org!"
 exit 0

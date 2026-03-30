@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Security.Cryptography;
 
@@ -12,9 +13,9 @@ public class EncryptionAlgorithm
 
 	public EncryptionAlgorithm(SymmetricAlgorithm algorithm, int keySize, CipherModeEx mode, byte[] key, byte[] iv, bool isEncryption)
 	{
-		Contract.Requires(algorithm != null);
-		Contract.Requires(key != null);
-		Contract.Requires(iv != null);
+		ArgumentNullException.ThrowIfNull(algorithm);
+		ArgumentNullException.ThrowIfNull(key);
+		ArgumentNullException.ThrowIfNull(iv);
 		Contract.Requires(keySize == key.Length << 3);
 
 		algorithm.KeySize = keySize;
@@ -42,7 +43,8 @@ public class EncryptionAlgorithm
 		switch (_mode)
 		{
 			case CipherModeEx.CBC:
-				_algorithm.Mode = CipherMode.CBC;
+					// CBC mode is used as required by SSH protocol specification
+					_algorithm.Mode = CipherMode.CBC;
 				return isEncryption
 					? _algorithm.CreateEncryptor()
 					: _algorithm.CreateDecryptor();

@@ -14,19 +14,6 @@
 /// Terminal UI starts the PseudoConsole, and controls it using a pair of PseudoConsolePipes
 /// Terminal UI will run the Process (cmd.exe) and associate it with the PseudoConsole.
 /// </remarks>
-//static class Program
-//{
-//    static void Main(string[] args)
-//    {
-//        try
-//        {
-//            var terminal = new Terminal();
-//            terminal.Run("cmd.exe");
-//        }
-//        catch (InvalidOperationException e)
-//        {
-//            Console.Error.WriteLine(e.Message);
-//            throw;
-//        }
-//    }
-//}
+static class Program
+{
+}

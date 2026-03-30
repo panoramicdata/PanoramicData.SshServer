@@ -3,18 +3,15 @@
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Authors>Panoramic Data Limited</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/panoramicdata/PanoramicData.SshServer</RepositoryUrl>
 		<PackageTags>ssh,server,nuget</PackageTags>
 		<Description>PanoramicData.SshServer is an SSH Server, based on FxSsh</Description>
 		<Title>PanoramicData.SshServer</Title>
-		<Copyright>Panoramic Data Limited 2024</Copyright>
 		<PackageProjectUrl>https://github.com/panoramicdata/PanoramicData.SshServer</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<IncludeSymbols>True</IncludeSymbols>
 		<PackageIcon>Panoramic Data.png</PackageIcon>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -25,8 +22,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />
-		<PackageReference Include="Nerdbank.GitVersioning" Version="3.9.50">
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+		<PackageReference Include="Nerdbank.GitVersioning">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

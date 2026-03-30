@@ -30,15 +30,16 @@ public class ConnectionService : SshService
 		Task.Run(MessageLoop);
 	}
 
-	public event EventHandler<CommandRequestedArgs> CommandOpened;
-	public event EventHandler<EnvironmentArgs> EnvReceived;
-	public event EventHandler<PtyArgs> PtyReceived;
-	public event EventHandler<TcpRequestArgs> TcpForwardRequest;
-	public event EventHandler<WindowChangeArgs> WindowChange;
+	public event EventHandler<CommandRequestedArgs>? CommandOpened;
+	public event EventHandler<EnvironmentArgs>? EnvReceived;
+	public event EventHandler<PtyArgs>? PtyReceived;
+	public event EventHandler<TcpRequestArgs>? TcpForwardRequest;
+	public event EventHandler<WindowChangeArgs>? WindowChange;
 
 	protected internal override void CloseService()
 	{
 		_messageCts.Cancel();
+		_messageCts.Dispose();
 
 		lock (_lock)
 		{
@@ -95,6 +96,7 @@ public class ConnectionService : SshService
 		}
 		catch (OperationCanceledException)
 		{
+			// Expected when the service is closed via cancellation token
 		}
 	}
 
@@ -127,6 +129,7 @@ public class ConnectionService : SshService
 
 	private static void HandleMessage(ShouldIgnoreMessage _)
 	{
+		// Intentionally empty: this message type is ignored per SSH protocol
 	}
 
 	private void HandleMessage(ForwardedTcpIpMessage message)
@@ -137,7 +140,7 @@ public class ConnectionService : SshService
 			(int)message.Port,
 			message.OriginatorIPAddress,
 			(int)message.OriginatorPort,
-			_auth);
+			_auth!);
 		TcpForwardRequest?.Invoke(_session, args);
 	}
 
@@ -149,7 +152,7 @@ public class ConnectionService : SshService
 			(int)message.Port,
 			message.OriginatorIPAddress,
 			(int)message.OriginatorPort,
-			_auth);
+			_auth!);
 		TcpForwardRequest?.Invoke(_session, args);
 	}
 
@@ -212,7 +215,7 @@ public class ConnectionService : SshService
 	{
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
-		EnvReceived?.Invoke(_session, new EnvironmentArgs(channel, message.Name, message.Value, _auth));
+		EnvReceived?.Invoke(_session, new EnvironmentArgs(channel, message.Name, message.Value, _auth!));
 
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
@@ -229,7 +232,7 @@ public class ConnectionService : SshService
 				message.heightRows,
 				message.widthPx,
 				message.widthChars,
-				message.modes, _auth));
+				message.modes, _auth!));
 
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
@@ -292,7 +295,7 @@ public class ConnectionService : SshService
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "shell", null, _auth));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "shell", null!, _auth!));
 	}
 
 	private void HandleMessage(CommandRequestMessage message)
@@ -302,7 +305,7 @@ public class ConnectionService : SshService
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "exec", message.Command, _auth));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "exec", message.Command, _auth!));
 	}
 
 	private void HandleMessage(SubsystemRequestMessage message)
@@ -312,7 +315,7 @@ public class ConnectionService : SshService
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "subsystem", message.Name, _auth));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "subsystem", message.Name, _auth!));
 	}
 
 	private void HandleMessage(WindowChangeMessage message)

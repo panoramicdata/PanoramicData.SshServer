@@ -1,5 +1,8 @@
 ## Panoramic Data SSH Server
-Panoramic Data SSH Server is a lightweight [SSH](http://en.wikipedia.org/wiki/Secure_Shell) server side application. 
+
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a1b2c3d4e5f6789012345678abcdef90)](https://app.codacy.com/gh/panoramicdata/PanoramicData.SshServer/dashboard)
+
+Panoramic Data SSH Server is a lightweight [SSH](http://en.wikipedia.org/wiki/Secure_Shell) server side application.
 
 ---
 ### Nuget

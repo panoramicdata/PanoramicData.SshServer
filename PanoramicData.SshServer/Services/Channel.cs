@@ -5,16 +5,17 @@ using System.Threading;
 
 namespace PanoramicData.SshServer.Services;
 
-public abstract class Channel
+public abstract class Channel : IDisposable
 {
 	protected ConnectionService _connectionService;
 	protected EventWaitHandle _sendingWindowWaitHandle = new ManualResetEvent(false);
+	private bool _disposed;
 
-	public Channel(ConnectionService connectionService,
+	protected Channel(ConnectionService connectionService,
 		uint clientChannelId, uint clientInitialWindowSize, uint clientMaxPacketSize,
 		uint serverChannelId)
 	{
-		Contract.Requires(connectionService != null);
+		ArgumentNullException.ThrowIfNull(connectionService);
 
 		_connectionService = connectionService;
 
@@ -44,9 +45,9 @@ public abstract class Channel
 	public bool ServerClosed { get; private set; }
 	public bool ServerMarkedEof { get; private set; }
 
-	public event EventHandler<byte[]> DataReceived;
-	public event EventHandler EofReceived;
-	public event EventHandler CloseReceived;
+	public event EventHandler<byte[]>? DataReceived;
+	public event EventHandler? EofReceived;
+	public event EventHandler? CloseReceived;
 
 	public void SendData(byte[] data)
 	{
@@ -75,7 +76,9 @@ public abstract class Channel
 			}
 
 			if (buf == null || packetSize != buf.Length)
-				buf = new byte[packetSize];
+				{
+					buf = new byte[packetSize];
+				}
 			Array.Copy(data, offset, buf, 0, packetSize);
 
 			msg.Data = buf;
@@ -90,21 +93,30 @@ public abstract class Channel
 	public void SendEof()
 	{
 		if (ServerMarkedEof)
+		{
 			return;
+		}
 
 		ServerMarkedEof = true;
 		var msg = new ChannelEofMessage { RecipientChannel = ClientChannelId };
 		_connectionService._session.SendMessage(msg);
 	}
 
-	public void SendClose(uint? exitCode = null)
+	public void SendClose() => SendClose(null);
+
+	public void SendClose(uint? exitCode)
 	{
 		if (ServerClosed)
+		{
 			return;
+		}
 
 		ServerClosed = true;
 		if (exitCode.HasValue)
+		{
 			_connectionService._session.SendMessage(new ExitStatusMessage { RecipientChannel = ClientChannelId, ExitStatus = exitCode.Value });
+		}
+
 		_connectionService._session.SendMessage(new ChannelCloseMessage { RecipientChannel = ClientChannelId });
 
 		CheckBothClosed();
@@ -173,5 +185,24 @@ public abstract class Channel
 		_connectionService.RemoveChannel(this);
 		_sendingWindowWaitHandle.Set();
 		_sendingWindowWaitHandle.Close();
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!_disposed)
+		{
+			if (disposing)
+			{
+				_sendingWindowWaitHandle.Dispose();
+			}
+
+			_disposed = true;
+		}
+	}
+
+	public void Dispose()
+	{
+		Dispose(disposing: true);
+		GC.SuppressFinalize(this);
 	}
 }
