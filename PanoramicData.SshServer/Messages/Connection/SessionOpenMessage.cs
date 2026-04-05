@@ -2,8 +2,12 @@
 
 namespace PanoramicData.SshServer.Messages.Connection;
 
+/// <summary>
+/// Represents an SSH session channel open message.
+/// </summary>
 public class SessionOpenMessage : ChannelOpenMessage
 {
+	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
 		base.OnLoad(reader);

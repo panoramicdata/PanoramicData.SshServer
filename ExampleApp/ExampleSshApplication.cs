@@ -13,10 +13,10 @@ internal sealed class ExampleSshApplication(
 {
 	private readonly ExampleSshApplicationConfiguration _config = options.Value;
 
-	public void SshServerSessionStart(object sshServerObject, Session session)
+	public void SshServerSessionStart(object? sshServerObject, Session session)
 	{
 		var sshServer = sshServerObject as SshServer
-			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject.GetType().Name}.");
+			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject?.GetType().Name ?? "null"}.");
 
 		logger.LogInformation(
 			"Session {SessionId} opened",
@@ -26,10 +26,10 @@ internal sealed class ExampleSshApplication(
 		session.KeysExchanged += KeysExchanged;
 	}
 
-	public void SshServerSessionEnd(object sshServerObject, Session session)
+	public void SshServerSessionEnd(object? sshServerObject, Session session)
 	{
 		var sshServer = sshServerObject as SshServer
-			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject.GetType().Name}.");
+			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject?.GetType().Name ?? "null"}.");
 
 		logger.LogInformation(
 			"Session {SessionId} closed",
@@ -39,19 +39,19 @@ internal sealed class ExampleSshApplication(
 		session.KeysExchanged -= KeysExchanged;
 	}
 
-	private void KeysExchanged(object sessionObject, KeyExchangeArgs keyExchangeArgs)
+	private void KeysExchanged(object? sessionObject, KeyExchangeArgs keyExchangeArgs)
 	{
-		var session = sessionObject as Session ?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject.GetType().Name}.");
+		var session = sessionObject as Session ?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject?.GetType().Name ?? "null"}.");
 
 		logger.LogInformation(
 			"Session {SessionId} Key exchange algorithms: {KeyExchangeAlg}",
 			session.Id,
-			string.Join(',', keyExchangeArgs.KeyExchangeAlgorithms));
+			string.Join(',', keyExchangeArgs.KeyExchangeAlgorithms ?? []));
 	}
 
-	private void ServiceRegistered(object sessionObject, SshService sshService)
+	private void ServiceRegistered(object? sessionObject, SshService sshService)
 	{
-		var session = sessionObject as Session ?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject.GetType().Name}.");
+		var session = sessionObject as Session ?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject?.GetType().Name ?? "null"}.");
 
 		logger.LogInformation("Session {SessionId} Requesting {ServiceType}.",
 			session.Id,
@@ -79,10 +79,10 @@ internal sealed class ExampleSshApplication(
 		}
 	}
 
-	private void WindowChange(object sessionObject, WindowChangeArgs windowChangeArgs)
+	private void WindowChange(object? sessionObject, WindowChangeArgs windowChangeArgs)
 	{
 		var session = sessionObject as Session
-				?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
+				?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject?.GetType().Name ?? "null"}");
 
 		logger.LogInformation("Session {SessionId} Server Channel {ServerChannel}, Client Channel {ClientChannel} Window size changed to {WidthColumns}x{HeightRows} ({WidthPixels}x{HeightPixels}).",
 			session.Id,
@@ -103,10 +103,10 @@ internal sealed class ExampleSshApplication(
 			);
 	}
 
-	private void TcpForwardRequest(object sessionObject, TcpRequestArgs e)
+	private void TcpForwardRequest(object? sessionObject, TcpRequestArgs e)
 	{
 		var session = sessionObject as Session
-			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject?.GetType().Name ?? "null"}");
 
 		logger.LogInformation("Session {SessionId} Received a request to forward data to {Host}:{Port}",
 			session.Id,
@@ -126,10 +126,10 @@ internal sealed class ExampleSshApplication(
 		tcp.Start();
 	}
 
-	private void PtyReceived(object sessionObject, PtyArgs ptyArgs)
+	private void PtyReceived(object? sessionObject, PtyArgs ptyArgs)
 	{
 		var session = sessionObject as Session
-			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject?.GetType().Name ?? "null"}");
 
 		logger.LogInformation("Session {SessionId} Request to create a PTY received for terminal type {TerminalType} ({WidthColumns}x{HeightRows} / {WidthPixels}x{HeightPixels})",
 			session.Id,
@@ -142,10 +142,10 @@ internal sealed class ExampleSshApplication(
 		session.SetTerminalSize(0, new TerminalSize(ptyArgs.WidthChars, ptyArgs.HeightRows, ptyArgs.WidthPx, ptyArgs.HeightPx));
 	}
 
-	private void EnvReceived(object sessionObject, EnvironmentArgs e)
+	private void EnvReceived(object? sessionObject, EnvironmentArgs e)
 	{
 		var session = sessionObject as Session
-			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject.GetType().Name}");
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}.  Received {sessionObject?.GetType().Name ?? "null"}");
 
 		logger.LogInformation("Session {SessionId} Received environment variable {Name}:{Value}",
 			session.Id,
@@ -153,10 +153,10 @@ internal sealed class ExampleSshApplication(
 			e.Value);
 	}
 
-	private void UserAuth(object userAuthServiceObject, UserAuthArgs userAuthArgs)
+	private void UserAuth(object? userAuthServiceObject, UserAuthArgs userAuthArgs)
 	{
 		var userAuthService = userAuthServiceObject as UserAuthService
-			?? throw new InvalidOperationException($"Expected {nameof(UserAuthService)}.  Received {userAuthServiceObject.GetType().Name}");
+			?? throw new InvalidOperationException($"Expected {nameof(UserAuthService)}.  Received {userAuthServiceObject?.GetType().Name ?? "null"}");
 
 		logger.LogInformation(
 			"Session {SessionId} KeyAlgorithm {KeyAlgorithm}, Key {Key}, Fingerprint: {Fingerprint}, Username {Username}, Password {Password}.",
@@ -173,10 +173,10 @@ internal sealed class ExampleSshApplication(
 		userAuthArgs.Result = true;
 	}
 
-	private void CommandOpened(object sessionObject, CommandRequestedArgs commandRequestArgs)
+	private void CommandOpened(object? sessionObject, CommandRequestedArgs commandRequestArgs)
 	{
 		var session = sessionObject as Session
-			?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject.GetType().Name}.");
+			?? throw new InvalidOperationException($"Expected {nameof(Session)}, but got {sessionObject?.GetType().Name ?? "null"}.");
 
 		logger.LogInformation("Session {SessionId} Server Channel {ServerChannelId} Client Channel {ClientChannelId} runs {ShellType}: \"{CommandText}\".",
 		session.Id,

@@ -1,5 +1,8 @@
 ﻿namespace PanoramicData.SshServer.Config;
 
+/// <summary>
+/// Configuration for the SSH server.
+/// </summary>
 public class SshServerConfiguration
 {
 	/// <summary>
@@ -21,6 +24,7 @@ public class SshServerConfiguration
 	///	The server banner to display to the client.
 	///	This is typically the SSH server software version.
 	///	It should be in the format "SSH-2.0-software".
+	/// </summary>
 	public string ServerBanner { get; set; } = string.Empty;
 
 	/// <summary>

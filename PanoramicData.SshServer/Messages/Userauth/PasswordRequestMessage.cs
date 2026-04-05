@@ -3,10 +3,17 @@ using System.Text;
 
 namespace PanoramicData.SshServer.Messages.Userauth;
 
+/// <summary>
+/// Represents an SSH password authentication request message.
+/// </summary>
 public class PasswordRequestMessage : RequestMessage
 {
-	public string Password { get; private set; }
+	/// <summary>
+	/// Gets the password.
+	/// </summary>
+	public string? Password { get; private set; }
 
+	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
 		base.OnLoad(reader);

@@ -4,6 +4,9 @@ using System.Security.Cryptography;
 
 namespace PanoramicData.SshServer.Algorithms;
 
+/// <summary>
+/// Implements CTR mode encryption as an <see cref="ICryptoTransform"/>.
+/// </summary>
 public class CtrModeCryptoTransform : ICryptoTransform
 {
 	private readonly SymmetricAlgorithm _algorithm;
@@ -12,6 +15,10 @@ public class CtrModeCryptoTransform : ICryptoTransform
 	private readonly byte[] _block;
 
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="CtrModeCryptoTransform"/> class.
+	/// </summary>
+	/// <param name="algorithm">The symmetric algorithm to use.</param>
 	public CtrModeCryptoTransform(SymmetricAlgorithm algorithm)
 	{
 		ArgumentNullException.ThrowIfNull(algorithm);
@@ -26,14 +33,19 @@ public class CtrModeCryptoTransform : ICryptoTransform
 		_block = new byte[algorithm.BlockSize >> 3];
 	}
 
+	/// <inheritdoc />
 	public bool CanReuseTransform => true;
 
+	/// <inheritdoc />
 	public bool CanTransformMultipleBlocks => true;
 
+	/// <inheritdoc />
 	public int InputBlockSize => _algorithm.BlockSize;
 
+	/// <inheritdoc />
 	public int OutputBlockSize => _algorithm.BlockSize;
 
+	/// <inheritdoc />
 	public int TransformBlock(byte[] inputBuffer, int inputOffset, int inputCount, byte[] outputBuffer, int outputOffset)
 	{
 		var written = 0;
@@ -58,6 +70,7 @@ public class CtrModeCryptoTransform : ICryptoTransform
 		return written;
 	}
 
+	/// <inheritdoc />
 	public byte[] TransformFinalBlock(byte[] inputBuffer, int inputOffset, int inputCount)
 	{
 		var output = new byte[inputCount];
@@ -65,6 +78,7 @@ public class CtrModeCryptoTransform : ICryptoTransform
 		return output;
 	}
 
+	/// <inheritdoc />
 	public void Dispose()
 	{
 		_transform.Dispose();

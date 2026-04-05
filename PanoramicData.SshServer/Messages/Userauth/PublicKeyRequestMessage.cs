@@ -4,15 +4,37 @@ using System.Text;
 
 namespace PanoramicData.SshServer.Messages.Userauth;
 
+/// <summary>
+/// Represents an SSH public key authentication request message.
+/// </summary>
 public class PublicKeyRequestMessage : RequestMessage
 {
+	/// <summary>
+	/// Gets a value indicating whether the request has a signature.
+	/// </summary>
 	public bool HasSignature { get; private set; }
-	public string KeyAlgorithmName { get; private set; }
-	public byte[] PublicKey { get; private set; }
-	public byte[] Signature { get; private set; }
 
-	public byte[] PayloadWithoutSignature { get; private set; }
+	/// <summary>
+	/// Gets the key algorithm name.
+	/// </summary>
+	public string? KeyAlgorithmName { get; private set; }
 
+	/// <summary>
+	/// Gets the public key data.
+	/// </summary>
+	public byte[]? PublicKey { get; private set; }
+
+	/// <summary>
+	/// Gets the signature data.
+	/// </summary>
+	public byte[]? Signature { get; private set; }
+
+	/// <summary>
+	/// Gets the payload without the signature.
+	/// </summary>
+	public byte[]? PayloadWithoutSignature { get; private set; }
+
+	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
 		base.OnLoad(reader);
@@ -27,7 +49,7 @@ public class PublicKeyRequestMessage : RequestMessage
 		if (HasSignature)
 		{
 			Signature = reader.ReadBinary();
-			PayloadWithoutSignature = [.. RawBytes.Take(RawBytes.Length - Signature.Length - 5)];
+			PayloadWithoutSignature = [.. RawBytes!.Take(RawBytes!.Length - Signature!.Length - 5)];
 		}
 	}
 }

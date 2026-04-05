@@ -108,9 +108,9 @@ static partial class ProcessApi
 	[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
 	[return: MarshalAs(UnmanagedType.Bool)]
 	internal static extern bool CreateProcess(
-		string lpApplicationName, string lpCommandLine, ref SECURITY_ATTRIBUTES lpProcessAttributes,
+		string? lpApplicationName, string lpCommandLine, ref SECURITY_ATTRIBUTES lpProcessAttributes,
 		ref SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags,
-		nint lpEnvironment, string lpCurrentDirectory, [In] ref STARTUPINFOEX lpStartupInfo,
+		nint lpEnvironment, string? lpCurrentDirectory, [In] ref STARTUPINFOEX lpStartupInfo,
 		out PROCESS_INFORMATION lpProcessInformation);
 #pragma warning restore SYSLIB1054
 

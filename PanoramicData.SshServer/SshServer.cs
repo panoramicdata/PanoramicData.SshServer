@@ -11,6 +11,12 @@ using System.Threading.Tasks;
 
 namespace PanoramicData.SshServer;
 
+/// <summary>
+/// SSH server that listens for and manages SSH connections.
+/// </summary>
+/// <param name="options">The server configuration options.</param>
+/// <param name="sshApplication">The SSH application handler.</param>
+/// <param name="keyManager">The host key manager.</param>
 public class SshServer(
 	IOptions<SshServerConfiguration> options,
 	ISshApplication sshApplication,
@@ -23,14 +29,29 @@ public class SshServer(
 	private TcpListener? _listener;
 	private bool _disposedValue;
 
+	/// <summary>
+	/// Gets the unique server identifier.
+	/// </summary>
 	public Guid Id { get; } = Guid.NewGuid();
 
 	private readonly SshServerConfiguration _config = (options ?? throw new ArgumentNullException(nameof(options))).Value;
 
+	/// <summary>
+	/// Occurs when a session starts.
+	/// </summary>
 	public event EventHandler<Session>? SessionStart;
+
+	/// <summary>
+	/// Occurs when a session ends.
+	/// </summary>
 	public event EventHandler<Session>? SessionEnd;
+
+	/// <summary>
+	/// Occurs when an exception is raised.
+	/// </summary>
 	public event EventHandler<Exception>? ExceptionRaised;
 
+	/// <inheritdoc />
 	public async Task StartAsync(CancellationToken cancellationToken)
 	{
 		if (_started)
@@ -62,6 +83,7 @@ public class SshServer(
 		_started = true;
 	}
 
+	/// <inheritdoc />
 	public Task StopAsync(CancellationToken cancellationToken)
 	{
 		lock (_lock)
@@ -89,6 +111,11 @@ public class SshServer(
 		return Task.CompletedTask;
 	}
 
+	/// <summary>
+	/// Adds a host key to the server.
+	/// </summary>
+	/// <param name="type">The key type.</param>
+	/// <param name="base64EncodedKey">The base64-encoded key.</param>
 	public void AddHostKey(string type, string base64EncodedKey)
 	{
 		ArgumentNullException.ThrowIfNull(type, nameof(type));
@@ -171,6 +198,10 @@ public class SshServer(
 		}
 	}
 
+	/// <summary>
+	/// Releases the unmanaged resources and optionally releases the managed resources.
+	/// </summary>
+	/// <param name="disposing">True to release both managed and unmanaged resources.</param>
 	protected virtual void Dispose(bool disposing)
 	{
 		if (!_disposedValue)
@@ -184,6 +215,7 @@ public class SshServer(
 		}
 	}
 
+	/// <inheritdoc />
 	public void Dispose()
 	{
 		// Do not change this code. Put clean-up code in 'Dispose(bool disposing)' method

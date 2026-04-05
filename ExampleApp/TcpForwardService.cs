@@ -14,8 +14,8 @@ public class TcpForwardService(
 	private readonly List<byte> _blocked = [];
 	private bool _connected;
 
-	public event EventHandler<byte[]> DataReceived;
-	public event EventHandler CloseReceived;
+	public event EventHandler<byte[]>? DataReceived;
+	public event EventHandler? CloseReceived;
 
 	public void Start() => Task.Run(() =>
 	{

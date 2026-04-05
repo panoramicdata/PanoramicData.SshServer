@@ -3,13 +3,15 @@ using PanoramicData.SshServer.Messages.Connection;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PanoramicData.SshServer.Services;
 
+/// <summary>
+/// Handles SSH connection service messages and channel management.
+/// </summary>
 public class ConnectionService : SshService
 {
 	private readonly Lock _lock = new();
@@ -20,22 +22,47 @@ public class ConnectionService : SshService
 
 	private int _serverChannelCounter = -1;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="ConnectionService"/> class.
+	/// </summary>
+	/// <param name="session">The SSH session.</param>
+	/// <param name="auth">The user authentication arguments.</param>
 	public ConnectionService(Session session, UserAuthArgs auth)
 		: base(session)
 	{
-		Contract.Requires(auth is not null);
+		ArgumentNullException.ThrowIfNull(auth);
 
 		_auth = auth;
 
 		Task.Run(MessageLoop);
 	}
 
+	/// <summary>
+	/// Occurs when a command is opened.
+	/// </summary>
 	public event EventHandler<CommandRequestedArgs>? CommandOpened;
+
+	/// <summary>
+	/// Occurs when an environment variable is received.
+	/// </summary>
 	public event EventHandler<EnvironmentArgs>? EnvReceived;
+
+	/// <summary>
+	/// Occurs when a PTY request is received.
+	/// </summary>
 	public event EventHandler<PtyArgs>? PtyReceived;
+
+	/// <summary>
+	/// Occurs when a TCP forwarding request is received.
+	/// </summary>
 	public event EventHandler<TcpRequestArgs>? TcpForwardRequest;
+
+	/// <summary>
+	/// Occurs when a window change request is received.
+	/// </summary>
 	public event EventHandler<WindowChangeArgs>? WindowChange;
 
+	/// <inheritdoc />
 	protected internal override void CloseService()
 	{
 		_messageCts.Cancel();
@@ -136,9 +163,9 @@ public class ConnectionService : SshService
 	{
 		var channel = HandleChannelOpenMessage(message);
 		var args = new TcpRequestArgs(channel,
-			message.Address,
+			message.Address!,
 			(int)message.Port,
-			message.OriginatorIPAddress,
+			message.OriginatorIPAddress!,
 			(int)message.OriginatorPort,
 			_auth!);
 		TcpForwardRequest?.Invoke(_session, args);
@@ -215,7 +242,7 @@ public class ConnectionService : SshService
 	{
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
-		EnvReceived?.Invoke(_session, new EnvironmentArgs(channel, message.Name, message.Value, _auth!));
+		EnvReceived?.Invoke(_session, new EnvironmentArgs(channel, message.Name!, message.Value!, _auth!));
 
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
@@ -241,7 +268,7 @@ public class ConnectionService : SshService
 	private void HandleMessage(ChannelDataMessage message)
 	{
 		var channel = FindChannelByServerId<Channel>(message.RecipientChannel);
-		channel.OnData(message.Data);
+		channel.OnData(message.Data!);
 	}
 
 	private void HandleMessage(ChannelWindowAdjustMessage message)
@@ -305,7 +332,7 @@ public class ConnectionService : SshService
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "exec", message.Command, _auth!));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "exec", message.Command!, _auth!));
 	}
 
 	private void HandleMessage(SubsystemRequestMessage message)
@@ -315,7 +342,7 @@ public class ConnectionService : SshService
 		if (message.WantReply)
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "subsystem", message.Name, _auth!));
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "subsystem", message.Name!, _auth!));
 	}
 
 	private void HandleMessage(WindowChangeMessage message)

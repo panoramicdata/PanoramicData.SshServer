@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
@@ -7,6 +6,9 @@ using System.Security.Cryptography;
 
 namespace PanoramicData.SshServer.Algorithms;
 
+/// <summary>
+/// Implements the Diffie-Hellman key exchange algorithm.
+/// </summary>
 public class DiffieHellman : AsymmetricAlgorithm
 {
 	// http://tools.ietf.org/html/rfc2412
@@ -28,10 +30,12 @@ public class DiffieHellman : AsymmetricAlgorithm
 	private readonly BigInteger _g;
 	private readonly BigInteger _x;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="DiffieHellman"/> class.
+	/// </summary>
+	/// <param name="bitlen">The key length in bits (1024, 2048, 4096, or 8192).</param>
 	public DiffieHellman(int bitlen)
 	{
-		Contract.Requires(bitlen is 1024 or 2048 or 4096 or 8192);
-
 		switch (bitlen)
 		{
 			case 1024:
@@ -63,6 +67,10 @@ public class DiffieHellman : AsymmetricAlgorithm
 		_x = BigInteger.Abs(new BigInteger(bytes));
 	}
 
+	/// <summary>
+	/// Creates the key exchange value.
+	/// </summary>
+	/// <returns>The public key exchange value.</returns>
 	public byte[] CreateKeyExchange()
 	{
 		var y = BigInteger.ModPow(_g, _x, _p);
@@ -70,9 +78,14 @@ public class DiffieHellman : AsymmetricAlgorithm
 		return bytes;
 	}
 
+	/// <summary>
+	/// Decrypts the key exchange to produce the shared secret.
+	/// </summary>
+	/// <param name="keyEx">The peer's key exchange value.</param>
+	/// <returns>The shared secret.</returns>
 	public byte[] DecryptKeyExchange(byte[] keyEx)
 	{
-		Contract.Requires(keyEx != null);
+		ArgumentNullException.ThrowIfNull(keyEx);
 
 		var pvr = BytesToBigint(keyEx);
 		var z = BigInteger.ModPow(pvr, _x, _p);

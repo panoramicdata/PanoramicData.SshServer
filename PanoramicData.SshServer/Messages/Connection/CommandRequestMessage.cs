@@ -2,10 +2,17 @@
 
 namespace PanoramicData.SshServer.Messages.Connection;
 
+/// <summary>
+/// Represents an SSH command request message.
+/// </summary>
 public class CommandRequestMessage : ChannelRequestMessage
 {
-	public string Command { get; private set; }
+	/// <summary>
+	/// Gets the command string.
+	/// </summary>
+	public string? Command { get; private set; }
 
+	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
 		base.OnLoad(reader);

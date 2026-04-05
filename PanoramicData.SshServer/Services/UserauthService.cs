@@ -4,12 +4,23 @@ using System;
 
 namespace PanoramicData.SshServer.Services;
 
+/// <summary>
+/// Handles SSH user authentication service messages.
+/// </summary>
+/// <param name="session">The SSH session.</param>
 public class UserAuthService(Session session) : SshService(session)
 {
-	public event EventHandler<UserAuthArgs> UserAuth;
+	/// <summary>
+	/// Occurs when user authentication is requested.
+	/// </summary>
+	public event EventHandler<UserAuthArgs>? UserAuth;
 
-	public event EventHandler<string> Succeed;
+	/// <summary>
+	/// Occurs when authentication succeeds.
+	/// </summary>
+	public event EventHandler<string>? Succeed;
 
+	/// <inheritdoc />
 	protected internal override void CloseService()
 	{
 	}
@@ -54,6 +65,11 @@ public class UserAuthService(Session session) : SshService(session)
 	private void HandleMessage(PasswordRequestMessage message)
 	{
 		var verifed = false;
+		if (message.Username is null || message.Password is null || message.ServiceName is null)
+		{
+			_session.SendMessage(new FailureMessage());
+			return;
+		}
 
 		var args = new UserAuthArgs(_session, message.Username, message.Password);
 		if (UserAuth != null)
@@ -79,6 +95,12 @@ public class UserAuthService(Session session) : SshService(session)
 
 	private void HandleMessage(PublicKeyRequestMessage message)
 	{
+		if (message.KeyAlgorithmName is null || message.PublicKey is null || message.Username is null || message.ServiceName is null)
+		{
+			_session.SendMessage(new FailureMessage());
+			return;
+		}
+
 		if (Session._publicKeyAlgorithms.TryGetValue(message.KeyAlgorithmName, out var value))
 		{
 			var verifed = false;
@@ -102,6 +124,12 @@ public class UserAuthService(Session session) : SshService(session)
 				return;
 			}
 
+			if (message.Signature is null || message.PayloadWithoutSignature is null || _session.ExchangeHash is null)
+			{
+				_session.SendMessage(new FailureMessage());
+				return;
+			}
+
 			var sig = keyAlg.GetSignature(message.Signature);
 
 			using (var worker = new SshDataWorker())
@@ -121,6 +149,10 @@ public class UserAuthService(Session session) : SshService(session)
 			_session.RegisterService(message.ServiceName, args);
 			Succeed?.Invoke(this, message.ServiceName);
 			_session.SendMessage(new SuccessMessage());
+		}
+		else
+		{
+			_session.SendMessage(new FailureMessage());
 		}
 	}
 }

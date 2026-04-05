@@ -14,6 +14,9 @@ using System.Threading;
 
 namespace PanoramicData.SshServer;
 
+/// <summary>
+/// Represents an SSH session.
+/// </summary>
 public partial class Session
 {
 	private const byte CarriageReturn = 0x0d;
@@ -46,16 +49,33 @@ public partial class Session
 	private readonly ConcurrentQueue<Message> _blockedMessages = new();
 	private readonly ManualResetEvent _hasBlockedMessagesWaitHandle = new(true);
 
+	/// <summary>
+	/// Gets the server version string.
+	/// </summary>
 	public string ServerVersion { get; private set; }
 
-	public string ClientVersion { get; private set; }
+	/// <summary>
+	/// Gets the client version string.
+	/// </summary>
+	public string ClientVersion { get; private set; } = string.Empty;
 
+	/// <summary>
+	/// Gets the unique session identifier.
+	/// </summary>
 	public Guid Id { get; } = Guid.NewGuid();
 
-	public byte[] ExchangeHash { get; private set; }
+	/// <summary>
+	/// Gets the exchange hash.
+	/// </summary>
+	public byte[]? ExchangeHash { get; private set; }
 
 	private readonly ConcurrentDictionary<uint, TerminalSize> _terminalSizes = new();
 
+	/// <summary>
+	/// Gets the terminal size for a specific server channel.
+	/// </summary>
+	/// <param name="serverChannelId">The server channel identifier.</param>
+	/// <returns>The terminal size.</returns>
 	public TerminalSize GetTerminalSize(uint serverChannelId)
 	{
 		if (!_terminalSizes.TryGetValue(serverChannelId, out var size))
@@ -66,9 +86,19 @@ public partial class Session
 		return size;
 	}
 
+	/// <summary>
+	/// Sets the terminal size for a specific server channel.
+	/// </summary>
+	/// <param name="serverChannelId">The server channel identifier.</param>
+	/// <param name="size">The terminal size.</param>
 	public void SetTerminalSize(uint serverChannelId, TerminalSize size)
 		=> _terminalSizes[serverChannelId] = size;
 
+	/// <summary>
+	/// Gets a registered service of the specified type.
+	/// </summary>
+	/// <typeparam name="T">The service type.</typeparam>
+	/// <returns>The service instance, or null if not registered.</returns>
 	public T? GetService<T>() where T : SshService => (T?)_services.FirstOrDefault(x => x is T);
 
 	static Session()
@@ -97,6 +127,13 @@ public partial class Session
 							 .ToDictionary(x => x.Number, x => x.Type);
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="Session"/> class.
+	/// </summary>
+	/// <param name="socket">The TCP socket.</param>
+	/// <param name="hostKey">The host key dictionary.</param>
+	/// <param name="serverBanner">The server banner string.</param>
+	/// <param name="inactivityTimeout">The inactivity timeout.</param>
 	public Session(Socket socket, Dictionary<string, string> hostKey, string serverBanner, TimeSpan inactivityTimeout)
 	{
 		ArgumentNullException.ThrowIfNull(socket, nameof(socket));
@@ -111,11 +148,20 @@ public partial class Session
 		ServerVersion = serverBanner;
 	}
 
-	public event EventHandler<EventArgs> Disconnected;
+	/// <summary>
+	/// Occurs when the session is disconnected.
+	/// </summary>
+	public event EventHandler<EventArgs>? Disconnected;
 
-	public event EventHandler<SshService> ServiceRegistered;
+	/// <summary>
+	/// Occurs when a service is registered.
+	/// </summary>
+	public event EventHandler<SshService>? ServiceRegistered;
 
-	public event EventHandler<KeyExchangeArgs> KeysExchanged;
+	/// <summary>
+	/// Occurs when keys are exchanged.
+	/// </summary>
+	public event EventHandler<KeyExchangeArgs>? KeysExchanged;
 
 	internal void EstablishConnection()
 	{
@@ -162,6 +208,11 @@ public partial class Session
 		}
 	}
 
+	/// <summary>
+	/// Disconnects the session.
+	/// </summary>
+	/// <param name="reason">The disconnect reason.</param>
+	/// <param name="description">The disconnect description.</param>
 	public void Disconnect(DisconnectReason reason = DisconnectReason.ByApplication, string description = "Connection terminated by the server.")
 	{
 		if (reason == DisconnectReason.ByApplication)
@@ -326,11 +377,11 @@ public partial class Session
 	{
 		var useAlg = _algorithms is not null;
 
-		var blockSize = (byte)(useAlg ? Math.Max(8, _algorithms.ClientEncryption.BlockBytesSize) : 8);
+		var blockSize = (byte)(useAlg ? Math.Max(8, _algorithms!.ClientEncryption.BlockBytesSize) : 8);
 		var firstBlock = SocketRead(blockSize);
 		if (useAlg)
 		{
-			firstBlock = _algorithms.ClientEncryption.Transform(firstBlock);
+			firstBlock = _algorithms!.ClientEncryption.Transform(firstBlock);
 		}
 
 		var packetLength = firstBlock[0] << 24 | firstBlock[1] << 16 | firstBlock[2] << 8 | firstBlock[3];
@@ -340,21 +391,21 @@ public partial class Session
 		var followingBlocks = SocketRead(bytesToRead);
 		if (useAlg)
 		{
-			followingBlocks = _algorithms.ClientEncryption.Transform(followingBlocks);
+			followingBlocks = _algorithms!.ClientEncryption.Transform(followingBlocks);
 		}
 
 		var fullPacket = firstBlock.Concat(followingBlocks).ToArray();
 		var data = fullPacket.Skip(5).Take(packetLength - paddingLength).ToArray();
 		if (useAlg)
 		{
-			var clientMac = SocketRead(_algorithms.ClientHmac.DigestLength);
-			var mac = ComputeHmac(_algorithms.ClientHmac, fullPacket, _inboundPacketSequence);
+			var clientMac = SocketRead(_algorithms!.ClientHmac.DigestLength);
+			var mac = ComputeHmac(_algorithms!.ClientHmac, fullPacket, _inboundPacketSequence);
 			if (!clientMac.SequenceEqual(mac))
 			{
 				throw new SshConnectionException("Invalid MAC", DisconnectReason.MacError);
 			}
 
-			data = _algorithms.ClientCompression.Decompress(data);
+			data = _algorithms!.ClientCompression.Decompress(data);
 		}
 
 		var typeNumber = data[0];
@@ -381,7 +432,7 @@ public partial class Session
 
 	internal void SendMessage(Message message)
 	{
-		Contract.Requires(message != null);
+		ArgumentNullException.ThrowIfNull(message);
 
 		if (_exchangeContext != null
 			&& message.MessageType > 4 && (message.MessageType < 20 || message.MessageType > 49))
@@ -399,10 +450,10 @@ public partial class Session
 	{
 		var useAlg = _algorithms != null;
 
-		var blockSize = (byte)(useAlg ? Math.Max(8, _algorithms.ServerEncryption.BlockBytesSize) : 8);
+		var blockSize = (byte)(useAlg ? Math.Max(8, _algorithms!.ServerEncryption.BlockBytesSize) : 8);
 		var payload = message.GetPacket();
 		if (useAlg)
-			payload = _algorithms.ServerCompression.Compress(payload);
+			payload = _algorithms!.ServerCompression.Compress(payload);
 
 		// http://tools.ietf.org/html/rfc4253
 		// 6.  Binary Packet Protocol
@@ -430,8 +481,8 @@ public partial class Session
 
 		if (useAlg)
 		{
-			var mac = ComputeHmac(_algorithms.ServerHmac, payload, _outboundPacketSequence);
-			payload = [.. _algorithms.ServerEncryption.Transform(payload), .. mac];
+			var mac = ComputeHmac(_algorithms!.ServerHmac, payload, _outboundPacketSequence);
+			payload = [.. _algorithms!.ServerEncryption.Transform(payload), .. mac];
 		}
 
 		SocketWrite(payload);
@@ -459,7 +510,7 @@ public partial class Session
 		if (kex)
 		{
 			var kexInitMessage = LoadKexInitMessage();
-			_exchangeContext.ServerKexInitPayload = kexInitMessage.GetPacket();
+			_exchangeContext!.ServerKexInitPayload = kexInitMessage.GetPacket();
 
 			SendMessage(kexInitMessage);
 		}
@@ -471,6 +522,11 @@ public partial class Session
 		{
 			while (_blockedMessages.TryDequeue(out var message))
 			{
+				if (message is null)
+				{
+					continue;
+				}
+
 				SendMessageInternal(message);
 			}
 		}
@@ -478,7 +534,7 @@ public partial class Session
 
 	internal bool TrySendMessage(Message message)
 	{
-		Contract.Requires(message != null);
+		ArgumentNullException.ThrowIfNull(message);
 
 		try
 		{
@@ -564,7 +620,7 @@ public partial class Session
 			ServerHostKeyAlgorithms = message.ServerHostKeyAlgorithms
 		});
 
-		_exchangeContext.KeyExchange = ChooseAlgorithm([.. _keyExchangeAlgorithms.Keys], message.KeyExchangeAlgorithms);
+		_exchangeContext!.KeyExchange = ChooseAlgorithm([.. _keyExchangeAlgorithms.Keys], message.KeyExchangeAlgorithms);
 		_exchangeContext.PublicKey = ChooseAlgorithm([.. _publicKeyAlgorithms.Keys], message.ServerHostKeyAlgorithms);
 		_exchangeContext.ClientEncryption = ChooseAlgorithm([.. _encryptionAlgorithms.Keys], message.EncryptionAlgorithmsClientToServer);
 		_exchangeContext.ServerEncryption = ChooseAlgorithm([.. _encryptionAlgorithms.Keys], message.EncryptionAlgorithmsServerToClient);
@@ -573,19 +629,19 @@ public partial class Session
 		_exchangeContext.ClientCompression = ChooseAlgorithm([.. _compressionAlgorithms.Keys], message.CompressionAlgorithmsClientToServer);
 		_exchangeContext.ServerCompression = ChooseAlgorithm([.. _compressionAlgorithms.Keys], message.CompressionAlgorithmsServerToClient);
 
-		_exchangeContext.ClientKexInitPayload = message.GetPacket();
+		_exchangeContext!.ClientKexInitPayload = message.GetPacket();
 	}
 
 	private void HandleMessage(KeyExchangeDhInitMessage message)
 	{
-		var kexAlg = _keyExchangeAlgorithms[_exchangeContext.KeyExchange]();
-		var hostKeyAlg = _publicKeyAlgorithms[_exchangeContext.PublicKey](_hostKey[_exchangeContext.PublicKey].ToString());
-		var clientCipher = _encryptionAlgorithms[_exchangeContext.ClientEncryption]();
-		var serverCipher = _encryptionAlgorithms[_exchangeContext.ServerEncryption]();
-		var serverHmac = _hmacAlgorithms[_exchangeContext.ServerHmac]();
-		var clientHmac = _hmacAlgorithms[_exchangeContext.ClientHmac]();
+		var kexAlg = _keyExchangeAlgorithms[_exchangeContext!.KeyExchange!]();
+		var hostKeyAlg = _publicKeyAlgorithms[_exchangeContext.PublicKey!](_hostKey[_exchangeContext.PublicKey!]);
+		var clientCipher = _encryptionAlgorithms[_exchangeContext.ClientEncryption!]();
+		var serverCipher = _encryptionAlgorithms[_exchangeContext.ServerEncryption!]();
+		var serverHmac = _hmacAlgorithms[_exchangeContext.ServerHmac!]();
+		var clientHmac = _hmacAlgorithms[_exchangeContext.ClientHmac!]();
 
-		var clientExchangeValue = message.E;
+		var clientExchangeValue = message.E!;
 		var serverExchangeValue = kexAlg.CreateKeyExchange();
 		var sharedSecret = kexAlg.DecryptKeyExchange(clientExchangeValue);
 		var hostKeyAndCerts = hostKeyAlg.CreateKeyAndCertificatesData();
@@ -608,8 +664,8 @@ public partial class Session
 			ServerEncryption = serverCipher.Cipher(serverCipherKey, serverCipherIV, true),
 			ClientHmac = clientHmac.Hmac(clientHmacKey),
 			ServerHmac = serverHmac.Hmac(serverHmacKey),
-			ClientCompression = _compressionAlgorithms[_exchangeContext.ClientCompression](),
-			ServerCompression = _compressionAlgorithms[_exchangeContext.ServerCompression](),
+			ClientCompression = _compressionAlgorithms[_exchangeContext.ClientCompression!](),
+			ServerCompression = _compressionAlgorithms[_exchangeContext.ServerCompression!](),
 		};
 
 		var reply = new KeyExchangeDhReplyMessage
@@ -631,7 +687,7 @@ public partial class Session
 		{
 			_inboundFlow = 0;
 			_outboundFlow = 0;
-			_algorithms = _exchangeContext.NewAlgorithms;
+			_algorithms = _exchangeContext!.NewAlgorithms;
 			_exchangeContext = null;
 		}
 
@@ -646,7 +702,7 @@ public partial class Session
 		var service = RegisterService(message.ServiceName);
 		if (service != null)
 		{
-			SendMessage(new ServiceAcceptMessage(message.ServiceName));
+			SendMessage(new ServiceAcceptMessage(message.ServiceName!));
 			return;
 		}
 
@@ -661,8 +717,13 @@ public partial class Session
 		=> GetService<ConnectionService>()?.HandleMessageCore(message);
 	#endregion
 
-	private static string ChooseAlgorithm(string[] serverAlgorithms, string[] clientAlgorithms)
+	private static string ChooseAlgorithm(string[] serverAlgorithms, string[]? clientAlgorithms)
 	{
+		if (clientAlgorithms is null)
+		{
+			throw new SshConnectionException("Failed to negotiate algorithm.", DisconnectReason.KeyExchangeFailed);
+		}
+
 		foreach (var client in clientAlgorithms)
 		{
 			foreach (var server in serverAlgorithms)
@@ -682,8 +743,8 @@ public partial class Session
 		using var worker = new SshDataWorker();
 		worker.Write(ClientVersion, Encoding.ASCII);
 		worker.Write(ServerVersion, Encoding.ASCII);
-		worker.WriteBinary(_exchangeContext.ClientKexInitPayload);
-		worker.WriteBinary(_exchangeContext.ServerKexInitPayload);
+		worker.WriteBinary(_exchangeContext!.ClientKexInitPayload!);
+		worker.WriteBinary(_exchangeContext.ServerKexInitPayload!);
 		worker.WriteBinary(hostKeyAndCerts);
 		worker.WriteMpint(clientExchangeValue);
 		worker.WriteMpint(serverExchangeValue);
@@ -713,7 +774,7 @@ public partial class Session
 				if (currentHash == null)
 				{
 					worker.Write((byte)letter);
-					worker.Write(ExchangeHash);
+					worker.Write(ExchangeHash!);
 				}
 				else
 				{
@@ -741,7 +802,7 @@ public partial class Session
 		return alg.ComputeHash(worker.ToByteArray());
 	}
 
-	internal SshService? RegisterService(string serviceName, UserAuthArgs? auth = null)
+	internal SshService? RegisterService(string? serviceName, UserAuthArgs? auth = null)
 	{
 		SshService? service = null;
 		switch (serviceName)
@@ -767,14 +828,14 @@ public partial class Session
 
 	private sealed class Algorithms
 	{
-		public KexAlgorithm KeyExchange;
-		public PublicKeyAlgorithm PublicKey;
-		public EncryptionAlgorithm ClientEncryption;
-		public EncryptionAlgorithm ServerEncryption;
-		public HmacAlgorithm ClientHmac;
-		public HmacAlgorithm ServerHmac;
-		public CompressionAlgorithm ClientCompression;
-		public CompressionAlgorithm ServerCompression;
+		public KexAlgorithm KeyExchange = null!;
+		public PublicKeyAlgorithm PublicKey = null!;
+		public EncryptionAlgorithm ClientEncryption = null!;
+		public EncryptionAlgorithm ServerEncryption = null!;
+		public HmacAlgorithm ClientHmac = null!;
+		public HmacAlgorithm ServerHmac = null!;
+		public CompressionAlgorithm ClientCompression = null!;
+		public CompressionAlgorithm ServerCompression = null!;
 	}
 
 	private sealed class ExchangeContext
@@ -797,6 +858,13 @@ public partial class Session
 	[GeneratedRegex("SSH-2.0-.+")]
 	private static partial Regex SshVersionRegex();
 
+	/// <summary>
+	/// Tries to get a session variable by name.
+	/// </summary>
+	/// <typeparam name="T">The variable type.</typeparam>
+	/// <param name="name">The variable name.</param>
+	/// <param name="value">The variable value if found.</param>
+	/// <returns>True if the variable exists and is of the correct type.</returns>
 	public bool TryGetSessionVariable<T>(string name, out T value)
 	{
 		if (_sessionVariables.TryGetValue(name, out var obj) && obj is T t)
@@ -810,6 +878,12 @@ public partial class Session
 		return false;
 	}
 
+	/// <summary>
+	/// Sets a session variable.
+	/// </summary>
+	/// <typeparam name="T">The variable type.</typeparam>
+	/// <param name="name">The variable name.</param>
+	/// <param name="value">The variable value.</param>
 	public void SetSessionVariable<T>(string name, T value)
 		=> _sessionVariables[name] = value;
 }

@@ -35,14 +35,32 @@ public class CommandService
 
 	public void OnData(byte[] data)
 	{
+		if (_process is null)
+		{
+			return;
+		}
+
 		_process.StandardInput.BaseStream.Write(data, 0, data.Length);
 		_process.StandardInput.BaseStream.Flush();
 	}
 
-	public void OnClose() => _process.StandardInput.BaseStream.Close();
+	public void OnClose()
+	{
+		if (_process is null)
+		{
+			return;
+		}
+
+		_process.StandardInput.BaseStream.Close();
+	}
 
 	private void MessageLoop()
 	{
+		if (_process is null)
+		{
+			return;
+		}
+
 		var bytes = new byte[1024 * 64];
 		while (true)
 		{
