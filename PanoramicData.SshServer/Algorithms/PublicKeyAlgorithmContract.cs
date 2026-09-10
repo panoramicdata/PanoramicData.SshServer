@@ -6,7 +6,7 @@ namespace PanoramicData.SshServer.Algorithms;
 [ContractClassFor(typeof(PublicKeyAlgorithm))]
 abstract class PublicKeyAlgorithmContract : PublicKeyAlgorithm
 {
-	public PublicKeyAlgorithmContract()
+	protected PublicKeyAlgorithmContract()
 		: base(null)
 	{
 	}

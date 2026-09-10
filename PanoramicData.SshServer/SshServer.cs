@@ -102,8 +102,11 @@ public class SshServer(
 				{
 					session.Disconnect();
 				}
-				catch
+				catch (Exception ex)
 				{
+					// The server is stopping, so a session that will not shut down cleanly must
+					// not stop the remaining ones from being disconnected. Report it and move on.
+					ExceptionRaised?.Invoke(this, ex);
 				}
 			}
 		}
@@ -118,8 +121,8 @@ public class SshServer(
 	/// <param name="base64EncodedKey">The base64-encoded key.</param>
 	public void AddHostKey(string type, string base64EncodedKey)
 	{
-		ArgumentNullException.ThrowIfNull(type, nameof(type));
-		ArgumentNullException.ThrowIfNull(type, nameof(base64EncodedKey));
+		ArgumentNullException.ThrowIfNull(type);
+		ArgumentNullException.ThrowIfNull(base64EncodedKey);
 		_hostKey.TryAdd(type, base64EncodedKey);
 	}
 
@@ -131,7 +134,7 @@ public class SshServer(
 		}
 		catch (ObjectDisposedException)
 		{
-			return;
+			// The listener has been stopped, so there is nothing left to accept on.
 		}
 		catch
 		{
@@ -150,51 +153,59 @@ public class SshServer(
 		try
 		{
 			var socket = _listener.EndAcceptSocket(ar);
-			Task.Run(() =>
-			{
-				var session = new Session(
-					socket,
-					_hostKey,
-					_config.ServerBanner,
-					TimeSpan.FromSeconds(_config.InactivityTimeoutSeconds ?? TimeSpan.FromDays(1).TotalSeconds));
-
-				session.Disconnected += (ss, ee) =>
-				{
-					lock (_lock)
-					{
-						SessionEnd?.Invoke(this, session);
-						_sessions.Remove(session);
-					}
-				};
-
-				lock (_lock)
-				{
-					_sessions.Add(session);
-				}
-
-				try
-				{
-					SessionStart?.Invoke(this, session);
-					session.EstablishConnection();
-				}
-				catch (SshConnectionException ex)
-				{
-					session.Disconnect(ex.DisconnectReason, ex.Message);
-					ExceptionRaised?.Invoke(this, ex);
-				}
-				catch (Exception ex)
-				{
-					session.Disconnect();
-					ExceptionRaised?.Invoke(this, ex);
-				}
-			});
+			Task.Run(() => RunSession(socket));
 		}
-		catch
+		catch (Exception ex)
 		{
+			// One connection failing to be accepted must not take the listener down with it;
+			// the finally below queues the next accept either way.
+			ExceptionRaised?.Invoke(this, ex);
 		}
 		finally
 		{
 			BeginAcceptSocket();
+		}
+	}
+
+	/// <summary>
+	/// Runs one accepted connection to completion on its own task.
+	/// </summary>
+	private void RunSession(Socket socket)
+	{
+		var session = new Session(
+			socket,
+			_hostKey,
+			_config.ServerBanner,
+			TimeSpan.FromSeconds(_config.InactivityTimeoutSeconds ?? TimeSpan.FromDays(1).TotalSeconds));
+
+		session.Disconnected += (_, _) =>
+		{
+			lock (_lock)
+			{
+				SessionEnd?.Invoke(this, session);
+				_sessions.Remove(session);
+			}
+		};
+
+		lock (_lock)
+		{
+			_sessions.Add(session);
+		}
+
+		try
+		{
+			SessionStart?.Invoke(this, session);
+			session.EstablishConnection();
+		}
+		catch (SshConnectionException ex)
+		{
+			session.Disconnect(ex.DisconnectReason, ex.Message);
+			ExceptionRaised?.Invoke(this, ex);
+		}
+		catch (Exception ex)
+		{
+			session.Disconnect();
+			ExceptionRaised?.Invoke(this, ex);
 		}
 	}
 

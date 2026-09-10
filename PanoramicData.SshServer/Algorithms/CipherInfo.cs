@@ -18,7 +18,7 @@ public class CipherInfo
 	/// <param name="mode">The cipher mode.</param>
 	public CipherInfo(SymmetricAlgorithm algorithm, int keySize, CipherModeEx mode)
 	{
-		ArgumentNullException.ThrowIfNull(algorithm, nameof(algorithm));
+		ArgumentNullException.ThrowIfNull(algorithm);
 		Contract.Requires(algorithm.LegalKeySizes.Any(x => x.MinSize <= keySize && keySize <= x.MaxSize && keySize % x.SkipSize == 0));
 
 		algorithm.KeySize = keySize;

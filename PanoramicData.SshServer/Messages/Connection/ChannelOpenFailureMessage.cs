@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace PanoramicData.SshServer.Messages.Connection;
 
@@ -6,14 +6,9 @@ namespace PanoramicData.SshServer.Messages.Connection;
 /// Represents an SSH channel open failure message.
 /// </summary>
 [Message("SSH_MSG_CHANNEL_OPEN_FAILURE", MessageNumber)]
-public class ChannelOpenFailureMessage : ConnectionServiceMessage
+public class ChannelOpenFailureMessage : ChannelMessage
 {
 	private const byte MessageNumber = 92;
-
-	/// <summary>
-	/// Gets or sets the recipient channel ID.
-	/// </summary>
-	public uint RecipientChannel { get; set; }
 
 	/// <summary>
 	/// Gets or sets the failure reason code.
@@ -36,7 +31,8 @@ public class ChannelOpenFailureMessage : ConnectionServiceMessage
 	/// <inheritdoc />
 	protected override void OnGetPacket(SshDataWorker writer)
 	{
-		writer.Write(RecipientChannel);
+		base.OnGetPacket(writer);
+
 		writer.Write((uint)ReasonCode);
 		writer.Write(Description ?? string.Empty, Encoding.ASCII);
 		writer.Write(Language ?? "en", Encoding.ASCII);

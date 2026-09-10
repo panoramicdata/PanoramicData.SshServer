@@ -12,18 +12,21 @@ using System.Threading.Tasks;
 
 namespace ExampleApp;
 
-#pragma warning disable CA1852 // Partial Program class cannot be sealed
-partial class Program
+sealed class Program
 {
+	// Program is only an entry point and a type argument for ILogger<Program>, never an instance.
+	private Program()
+	{
+	}
+
 	static async Task Main()
 	{
-		var cancellationTokenSource = new CancellationTokenSource();
+		using var cancellationTokenSource = new CancellationTokenSource();
 		var services = new ServiceCollection();
 
 		// Determine where we will look for the appsettings.json file in debug mode
 		var appSettingsPath = "../../../appsettings.json";
 		var fileInfo = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), appSettingsPath));
-		var fileExists = fileInfo.Exists;
 
 		// Build configuration
 		var configuration = new ConfigurationBuilder()
@@ -52,7 +55,7 @@ partial class Program
 		var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
 		// Listen for shutdown requests (e.g., Ctrl+C)
-		Console.CancelKeyPress += (sender, e) =>
+		Console.CancelKeyPress += (_, e) =>
 		{
 			logger.LogInformation("Exiting...");
 			e.Cancel = true; // Prevents the process from terminating immediately

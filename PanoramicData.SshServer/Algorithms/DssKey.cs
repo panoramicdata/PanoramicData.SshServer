@@ -1,15 +1,20 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+using System.Security.Cryptography;
 
 namespace PanoramicData.SshServer.Algorithms;
 
 /// <summary>
 /// Implements the DSS (Digital Signature Standard) public key algorithm.
 /// </summary>
-/// <param name="key">The optional base64-encoded key.</param>
-public class DssKey(string? key = null) : PublicKeyAlgorithm(key)
+public class DssKey : PublicKeyAlgorithm
 {
 	private readonly DSACryptoServiceProvider _algorithm = new();
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="DssKey"/> class.
+	/// </summary>
+	/// <param name="key">The optional base64-encoded key.</param>
+	public DssKey(string? key = null)
+		: base(key) => ImportConstructorKey();
 
 	/// <inheritdoc />
 	public override string Name => "ssh-dss";
@@ -24,33 +29,22 @@ public class DssKey(string? key = null) : PublicKeyAlgorithm(key)
 	public override void LoadKeyAndCertificatesData(byte[] data)
 	{
 		using var worker = new SshDataWorker(data);
-		if (worker.ReadString(Encoding.ASCII) != Name)
-			throw new CryptographicException("Key and certificates were not created with this algorithm.");
+		ReadAndVerifyName(worker);
 
-		var args = new DSAParameters
+		_algorithm.ImportParameters(new DSAParameters
 		{
 			P = worker.ReadMpint(),
 			Q = worker.ReadMpint(),
 			G = worker.ReadMpint(),
 			Y = worker.ReadMpint()
-		};
-
-		_algorithm.ImportParameters(args);
+		});
 	}
 
 	/// <inheritdoc />
 	public override byte[] CreateKeyAndCertificatesData()
 	{
-		using var worker = new SshDataWorker();
 		var args = _algorithm.ExportParameters(false);
-
-		worker.Write(Name, Encoding.ASCII);
-		worker.WriteMpint(args.P!);
-		worker.WriteMpint(args.Q!);
-		worker.WriteMpint(args.G!);
-		worker.WriteMpint(args.Y!);
-
-		return worker.ToByteArray();
+		return WriteKeyAndCertificatesData(args.P!, args.Q!, args.G!, args.Y!);
 	}
 
 	/// <inheritdoc />

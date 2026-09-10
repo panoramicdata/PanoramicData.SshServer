@@ -19,9 +19,14 @@ public class PasswordRequestMessage : RequestMessage
 		base.OnLoad(reader);
 
 		if (MethodName != "password")
+		{
 			throw new ArgumentException(string.Format("Method name {0} is not valid.", MethodName));
+		}
 
-		var isFalse = reader.ReadBoolean();
+		// RFC 4252 section 8: FALSE here means "password", TRUE means "change password",
+		// which this server does not support. The flag still has to be consumed so that
+		// the reader stays aligned with the rest of the payload.
+		_ = reader.ReadBoolean();
 		Password = reader.ReadString(Encoding.ASCII);
 	}
 }

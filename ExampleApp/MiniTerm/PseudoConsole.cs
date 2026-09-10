@@ -7,16 +7,11 @@ namespace ExampleApp.MiniTerm;
 /// <summary>
 /// Utility functions around the new Pseudo Console APIs
 /// </summary>
-internal sealed class PseudoConsole : IDisposable
+internal sealed class PseudoConsole(nint handle) : IDisposable
 {
 	public static readonly nint PseudoConsoleThreadAttribute = (nint)PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE;
 
-	public nint Handle { get; }
-
-	private PseudoConsole(nint handle)
-	{
-		Handle = handle;
-	}
+	public nint Handle { get; } = handle;
 
 	internal static PseudoConsole Create(SafeFileHandle inputReadSide, SafeFileHandle outputWriteSide, uint width, uint height)
 	{

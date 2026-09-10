@@ -14,5 +14,6 @@ public class ShouldIgnoreMessage : ConnectionServiceMessage
 	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
+		// SSH_MSG_IGNORE payload is deliberately discarded (RFC 4253 section 11.2).
 	}
 }

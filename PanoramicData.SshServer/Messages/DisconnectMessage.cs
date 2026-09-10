@@ -21,9 +21,28 @@ public class DisconnectMessage : Message
 	/// Initializes a new instance of the <see cref="DisconnectMessage"/> class with the specified reason.
 	/// </summary>
 	/// <param name="reasonCode">The disconnect reason code.</param>
+	public DisconnectMessage(DisconnectReason reasonCode)
+		: this(reasonCode, string.Empty)
+	{
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="DisconnectMessage"/> class with the specified reason and description.
+	/// </summary>
+	/// <param name="reasonCode">The disconnect reason code.</param>
+	/// <param name="description">The description.</param>
+	public DisconnectMessage(DisconnectReason reasonCode, string description)
+		: this(reasonCode, description, "en")
+	{
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="DisconnectMessage"/> class with the specified reason, description and language.
+	/// </summary>
+	/// <param name="reasonCode">The disconnect reason code.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="language">The language tag.</param>
-	public DisconnectMessage(DisconnectReason reasonCode, string description = "", string language = "en")
+	public DisconnectMessage(DisconnectReason reasonCode, string description, string language)
 	{
 		ArgumentNullException.ThrowIfNull(description);
 		ArgumentNullException.ThrowIfNull(language);
@@ -57,7 +76,9 @@ public class DisconnectMessage : Message
 		ReasonCode = (DisconnectReason)reader.ReadUInt32();
 		Description = reader.ReadString(Encoding.UTF8);
 		if (reader.DataAvailable >= 4)
+		{
 			Language = reader.ReadString(Encoding.UTF8);
+		}
 	}
 
 	/// <inheritdoc />

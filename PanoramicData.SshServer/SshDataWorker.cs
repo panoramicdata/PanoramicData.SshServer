@@ -161,7 +161,9 @@ public class SshDataWorker : IDisposable
 		var num = _ms.ReadByte();
 
 		if (num == -1)
+		{
 			throw new EndOfStreamException();
+		}
 		return num != 0;
 	}
 
@@ -218,7 +220,9 @@ public class SshDataWorker : IDisposable
 		var data = ReadBinary();
 
 		if (data.Length == 0)
+		{
 			return new byte[1];
+		}
 
 		if (data[0] == 0)
 		{

@@ -1,15 +1,20 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+using System.Security.Cryptography;
 
 namespace PanoramicData.SshServer.Algorithms;
 
 /// <summary>
 /// Implements the RSA public key algorithm.
 /// </summary>
-/// <param name="key">The optional base64-encoded key.</param>
-public class RsaKey(string? key = null) : PublicKeyAlgorithm(key)
+public class RsaKey : PublicKeyAlgorithm
 {
 	private readonly RSACryptoServiceProvider _algorithm = new();
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="RsaKey"/> class.
+	/// </summary>
+	/// <param name="key">The optional base64-encoded key.</param>
+	public RsaKey(string? key = null)
+		: base(key) => ImportConstructorKey();
 
 	/// <inheritdoc />
 	public override string Name => "rsa-sha2-256";
@@ -24,29 +29,20 @@ public class RsaKey(string? key = null) : PublicKeyAlgorithm(key)
 	public override void LoadKeyAndCertificatesData(byte[] data)
 	{
 		using var worker = new SshDataWorker(data);
-		if (worker.ReadString(Encoding.ASCII) != Name)
-			throw new CryptographicException("Key and certificates were not created with this algorithm.");
+		ReadAndVerifyName(worker);
 
-		var args = new RSAParameters
+		_algorithm.ImportParameters(new RSAParameters
 		{
 			Exponent = worker.ReadMpint(),
 			Modulus = worker.ReadMpint()
-		};
-
-		_algorithm.ImportParameters(args);
+		});
 	}
 
 	/// <inheritdoc />
 	public override byte[] CreateKeyAndCertificatesData()
 	{
-		using var worker = new SshDataWorker();
 		var args = _algorithm.ExportParameters(false);
-
-		worker.Write(Name, Encoding.ASCII);
-		worker.WriteMpint(args.Exponent!);
-		worker.WriteMpint(args.Modulus!);
-
-		return worker.ToByteArray();
+		return WriteKeyAndCertificatesData(args.Exponent!, args.Modulus!);
 	}
 
 	/// <inheritdoc />

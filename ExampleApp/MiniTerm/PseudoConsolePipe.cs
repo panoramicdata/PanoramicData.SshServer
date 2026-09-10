@@ -26,19 +26,10 @@ internal sealed class PseudoConsolePipe : IDisposable
 
 	#region IDisposable
 
-	void Dispose(bool disposing)
-	{
-		if (disposing)
-		{
-			ReadSide?.Dispose();
-			WriteSide?.Dispose();
-		}
-	}
-
 	public void Dispose()
 	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
+		ReadSide?.Dispose();
+		WriteSide?.Dispose();
 	}
 
 	#endregion

@@ -1,4 +1,7 @@
-﻿namespace PanoramicData.SshServer.Services;
+﻿using PanoramicData.SshServer.Messages;
+using System;
+
+namespace PanoramicData.SshServer.Services;
 
 /// <summary>
 /// Contains arguments for a key exchange event.
@@ -12,6 +15,29 @@ public class KeyExchangeArgs
 	public KeyExchangeArgs(Session s)
 	{
 		Session = s;
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="KeyExchangeArgs"/> class from the
+	/// algorithm lists a client offered in its SSH_MSG_KEXINIT.
+	/// </summary>
+	/// <param name="s">The SSH session.</param>
+	/// <param name="message">The key exchange init message the client sent.</param>
+	public KeyExchangeArgs(Session s, KeyExchangeInitMessage message)
+	{
+		ArgumentNullException.ThrowIfNull(message);
+
+		Session = s;
+		KeyExchangeAlgorithms = message.KeyExchangeAlgorithms;
+		ServerHostKeyAlgorithms = message.ServerHostKeyAlgorithms;
+		EncryptionAlgorithmsClientToServer = message.EncryptionAlgorithmsClientToServer;
+		EncryptionAlgorithmsServerToClient = message.EncryptionAlgorithmsServerToClient;
+		MacAlgorithmsClientToServer = message.MacAlgorithmsClientToServer;
+		MacAlgorithmsServerToClient = message.MacAlgorithmsServerToClient;
+		CompressionAlgorithmsClientToServer = message.CompressionAlgorithmsClientToServer;
+		CompressionAlgorithmsServerToClient = message.CompressionAlgorithmsServerToClient;
+		LanguagesClientToServer = message.LanguagesClientToServer;
+		LanguagesServerToClient = message.LanguagesServerToClient;
 	}
 
 	/// <summary>

@@ -34,7 +34,9 @@ public class ForwardedTcpIpMessage : ChannelOpenMessage
 		base.OnLoad(reader);
 
 		if (ChannelType != "forwarded-tcpip")
+		{
 			throw new ArgumentException(string.Format("Channel type {0} is not valid.", ChannelType));
+		}
 
 		Address = reader.ReadString(Encoding.ASCII);
 		Port = reader.ReadUInt32();

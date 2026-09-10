@@ -28,7 +28,9 @@ public class EncryptionAlgorithm
 		ArgumentNullException.ThrowIfNull(key);
 		ArgumentNullException.ThrowIfNull(iv);
 		if (keySize != key.Length << 3)
+		{
 			throw new ArgumentException($"Key size {keySize} does not match key length.", nameof(keySize));
+		}
 
 		algorithm.KeySize = keySize;
 		algorithm.Key = key;
@@ -63,8 +65,12 @@ public class EncryptionAlgorithm
 		switch (_mode)
 		{
 			case CipherModeEx.CBC:
-					// CBC mode is used as required by SSH protocol specification
-					_algorithm.Mode = CipherMode.CBC;
+				// aes256-cbc is one of the ciphers RFC 4253 defines, and SSH provides message
+				// integrity separately through the MAC negotiated for the connection, so the
+				// mode not carrying integrity of its own is not the exposure it would be
+				// elsewhere. Callers who want an AEAD-style mode should negotiate aes256-ctr.
+				// nosemgrep: csharp_crypto_rule-WeakCipherMode
+				_algorithm.Mode = CipherMode.CBC;
 				return isEncryption
 					? _algorithm.CreateEncryptor()
 					: _algorithm.CreateDecryptor();

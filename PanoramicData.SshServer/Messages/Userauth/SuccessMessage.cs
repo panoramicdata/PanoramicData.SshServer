@@ -14,5 +14,6 @@ public class SuccessMessage : UserAuthServiceMessage
 	/// <inheritdoc />
 	protected override void OnGetPacket(SshDataWorker writer)
 	{
+		// SSH_MSG_USERAUTH_SUCCESS has no payload beyond the message number (RFC 4252 section 5.1).
 	}
 }

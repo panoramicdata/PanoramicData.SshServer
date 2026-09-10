@@ -15,7 +15,7 @@ internal sealed class ExampleSshApplication(
 
 	public void SshServerSessionStart(object? sshServerObject, Session session)
 	{
-		var sshServer = sshServerObject as SshServer
+		_ = sshServerObject as SshServer
 			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject?.GetType().Name ?? "null"}.");
 
 		logger.LogInformation(
@@ -28,7 +28,7 @@ internal sealed class ExampleSshApplication(
 
 	public void SshServerSessionEnd(object? sshServerObject, Session session)
 	{
-		var sshServer = sshServerObject as SshServer
+		_ = sshServerObject as SshServer
 			?? throw new InvalidOperationException($"Expected {nameof(SshServer)}, but got {sshServerObject?.GetType().Name ?? "null"}.");
 
 		logger.LogInformation(
@@ -119,10 +119,10 @@ internal sealed class ExampleSshApplication(
 		}
 
 		var tcp = new TcpForwardService(e.Host, e.Port);
-		e.Channel.DataReceived += (ss, ee) => tcp.OnData(ee);
-		e.Channel.CloseReceived += (ss, ee) => tcp.OnClose();
-		tcp.DataReceived += (ss, ee) => e.Channel.SendData(ee);
-		tcp.CloseReceived += (ss, ee) => e.Channel.SendClose();
+		e.Channel.DataReceived += (_, ee) => tcp.OnData(ee);
+		e.Channel.CloseReceived += (_, _) => tcp.OnClose();
+		tcp.DataReceived += (_, ee) => e.Channel.SendData(ee);
+		tcp.CloseReceived += (_, _) => e.Channel.SendClose();
 		tcp.Start();
 	}
 
@@ -155,7 +155,7 @@ internal sealed class ExampleSshApplication(
 
 	private void UserAuth(object? userAuthServiceObject, UserAuthArgs userAuthArgs)
 	{
-		var userAuthService = userAuthServiceObject as UserAuthService
+		_ = userAuthServiceObject as UserAuthService
 			?? throw new InvalidOperationException($"Expected {nameof(UserAuthService)}.  Received {userAuthServiceObject?.GetType().Name ?? "null"}");
 
 		logger.LogInformation(
@@ -195,10 +195,10 @@ internal sealed class ExampleSshApplication(
 
 					// DANGER! The following is a simple pass-through to CMD, running as the user that the SSH server is running as:
 					var terminal = new Terminal("cmd.exe", terminalSize.WidthColumns, terminalSize.HeightRows);
-					commandRequestArgs.Channel.DataReceived += (ss, ee) => terminal.OnInput(ee);
-					commandRequestArgs.Channel.CloseReceived += (ss, ee) => terminal.OnClose();
-					terminal.DataReceived += (ss, ee) => commandRequestArgs.Channel.SendData(ee);
-					terminal.CloseReceived += (ss, ee) => commandRequestArgs.Channel.SendClose(ee);
+					commandRequestArgs.Channel.DataReceived += (_, ee) => terminal.OnInput(ee);
+					commandRequestArgs.Channel.CloseReceived += (_, _) => terminal.OnClose();
+					terminal.DataReceived += (_, ee) => commandRequestArgs.Channel.SendData(ee);
+					terminal.CloseReceived += (_, ee) => commandRequestArgs.Channel.SendClose(ee);
 
 					terminal.Run();
 					break;

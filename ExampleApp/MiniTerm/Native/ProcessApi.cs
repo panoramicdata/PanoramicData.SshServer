@@ -29,7 +29,7 @@ static partial class ProcessApi
 	}
 
 	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-	internal struct STARTUPINFO
+	internal struct STARTUPINFO : IEquatable<STARTUPINFO>
 	{
 		public int cb;
 		public string lpReserved;
@@ -49,6 +49,28 @@ static partial class ProcessApi
 		public nint hStdInput;
 		public nint hStdOutput;
 		public nint hStdError;
+
+		public readonly bool Equals(STARTUPINFO other) =>
+			cb == other.cb && lpReserved == other.lpReserved && lpDesktop == other.lpDesktop &&
+			lpTitle == other.lpTitle && dwX == other.dwX && dwY == other.dwY &&
+			dwXSize == other.dwXSize && dwYSize == other.dwYSize &&
+			dwXCountChars == other.dwXCountChars && dwYCountChars == other.dwYCountChars &&
+			dwFillAttribute == other.dwFillAttribute && dwFlags == other.dwFlags &&
+			wShowWindow == other.wShowWindow && cbReserved2 == other.cbReserved2 &&
+			lpReserved2 == other.lpReserved2 && hStdInput == other.hStdInput &&
+			hStdOutput == other.hStdOutput && hStdError == other.hStdError;
+
+		public override readonly bool Equals(object? obj) => obj is STARTUPINFO other && Equals(other);
+
+		public override readonly int GetHashCode() =>
+			HashCode.Combine(
+				HashCode.Combine(cb, lpReserved, lpDesktop, lpTitle, dwX, dwY, dwXSize, dwYSize),
+				HashCode.Combine(dwXCountChars, dwYCountChars, dwFillAttribute, dwFlags, wShowWindow, cbReserved2),
+				HashCode.Combine(lpReserved2, hStdInput, hStdOutput, hStdError));
+
+		public static bool operator ==(STARTUPINFO left, STARTUPINFO right) => left.Equals(right);
+
+		public static bool operator !=(STARTUPINFO left, STARTUPINFO right) => !left.Equals(right);
 	}
 
 	[StructLayout(LayoutKind.Sequential)]

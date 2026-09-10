@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace PanoramicData.SshServer.Messages.Connection;
 
@@ -6,14 +6,9 @@ namespace PanoramicData.SshServer.Messages.Connection;
 /// Represents an SSH channel request message.
 /// </summary>
 [Message("SSH_MSG_CHANNEL_REQUEST", MessageNumber)]
-public class ChannelRequestMessage : ConnectionServiceMessage
+public class ChannelRequestMessage : ChannelMessage
 {
 	private const byte MessageNumber = 98;
-
-	/// <summary>
-	/// Gets or sets the recipient channel ID.
-	/// </summary>
-	public uint RecipientChannel { get; set; }
 
 	/// <summary>
 	/// Gets or sets the request type.
@@ -31,7 +26,8 @@ public class ChannelRequestMessage : ConnectionServiceMessage
 	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
-		RecipientChannel = reader.ReadUInt32();
+		base.OnLoad(reader);
+
 		RequestType = reader.ReadString(Encoding.ASCII);
 		WantReply = reader.ReadBoolean();
 	}
@@ -39,7 +35,8 @@ public class ChannelRequestMessage : ConnectionServiceMessage
 	/// <inheritdoc />
 	protected override void OnGetPacket(SshDataWorker writer)
 	{
-		writer.Write(RecipientChannel);
+		base.OnGetPacket(writer);
+
 		writer.Write(RequestType ?? string.Empty, Encoding.ASCII);
 		writer.Write(WantReply);
 	}

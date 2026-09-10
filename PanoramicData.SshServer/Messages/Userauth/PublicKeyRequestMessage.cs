@@ -40,7 +40,9 @@ public class PublicKeyRequestMessage : RequestMessage
 		base.OnLoad(reader);
 
 		if (MethodName != "publickey")
+		{
 			throw new ArgumentException(string.Format("Method name {0} is not valid.", MethodName));
+		}
 
 		HasSignature = reader.ReadBoolean();
 		KeyAlgorithmName = reader.ReadString(Encoding.ASCII);

@@ -28,6 +28,12 @@ public class CommandService
 
 	public void Start()
 	{
+		// The command and arguments come from whatever the caller passed to the constructor.
+		// This class is a sample of how to wire a process to an SSH channel; it is not used by
+		// ExampleSshApplication, which denies "exec" requests outright. Anything that does use
+		// it must decide for itself which commands an authenticated user may run — passing an
+		// exec request straight through from the wire would hand the client a shell.
+		// nosemgrep: csharp_injection_rule-CommandInjection
 		_process = Process.Start(_startInfo)
 			?? throw new InvalidOperationException("Failed to start process.");
 		Task.Run(() => MessageLoop());
@@ -66,7 +72,9 @@ public class CommandService
 		{
 			var len = _process.StandardOutput.BaseStream.Read(bytes, 0, bytes.Length);
 			if (len <= 0)
+			{
 				break;
+			}
 
 			var data = bytes.Length != len
 				? [.. bytes.Take(len)]

@@ -29,7 +29,9 @@ public abstract class Message
 		using var worker = new SshDataWorker(bytes);
 		var number = worker.ReadByte();
 		if (number != MessageType)
+		{
 			throw new ArgumentException(string.Format("Message type {0} is not valid.", number));
+		}
 
 		OnLoad(worker);
 	}

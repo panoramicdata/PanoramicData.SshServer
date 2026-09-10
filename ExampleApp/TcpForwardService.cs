@@ -60,7 +60,11 @@ public class TcpForwardService(
 		{
 			_socket.Shutdown(SocketShutdown.Send);
 		}
-		catch { }
+		catch (SocketException)
+		{
+			// The forwarded connection is already gone — which is the state OnClose is asking
+			// for — so there is nothing to recover from and nothing left to tell the peer.
+		}
 	}
 
 	private void MessageLoop()
@@ -73,7 +77,9 @@ public class TcpForwardService(
 		{
 			var len = _socket.Receive(bytes);
 			if (len <= 0)
+			{
 				break;
+			}
 
 			var data = bytes.Length != len
 				? [.. bytes.Take(len)]

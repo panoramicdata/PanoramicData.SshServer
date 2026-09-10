@@ -9,17 +9,64 @@ namespace PanoramicData.SshServer.Algorithms;
 /// </summary>
 public abstract class PublicKeyAlgorithm
 {
+	private readonly string? _base64Key;
+
 	/// <summary>
 	/// Initializes a new instance of the <see cref="PublicKeyAlgorithm"/> class.
 	/// </summary>
 	/// <param name="key">The optional base64-encoded key.</param>
-	public PublicKeyAlgorithm(string? key)
+	/// <remarks>
+	/// The key is only stored here, not imported. Importing it would mean calling the
+	/// overridable <see cref="ImportKey"/> while the derived type is still being constructed,
+	/// so derived types call <see cref="ImportConstructorKey"/> from their own constructor
+	/// instead, once their own state is in place.
+	/// </remarks>
+	protected PublicKeyAlgorithm(string? key) => _base64Key = key;
+
+	/// <summary>
+	/// Imports the base64-encoded key that was passed to the constructor, if there was one.
+	/// </summary>
+	/// <remarks>Derived types must call this from their own constructor.</remarks>
+	protected void ImportConstructorKey()
 	{
-		if (!string.IsNullOrEmpty(key))
+		if (!string.IsNullOrEmpty(_base64Key))
 		{
-			var bytes = Convert.FromBase64String(key);
-			ImportKey(bytes);
+			ImportKey(Convert.FromBase64String(_base64Key));
 		}
+	}
+
+	/// <summary>
+	/// Reads the algorithm name from the given reader and checks that it names this algorithm.
+	/// </summary>
+	/// <param name="reader">The reader positioned at the algorithm name.</param>
+	/// <exception cref="CryptographicException">The name does not match <see cref="Name"/>.</exception>
+	protected void ReadAndVerifyName(SshDataWorker reader)
+	{
+		ArgumentNullException.ThrowIfNull(reader);
+
+		if (reader.ReadString(Encoding.ASCII) != Name)
+		{
+			throw new CryptographicException("Key and certificates were not created with this algorithm.");
+		}
+	}
+
+	/// <summary>
+	/// Writes this algorithm name followed by the given key components as SSH mpints.
+	/// </summary>
+	/// <param name="components">The key components, in wire order.</param>
+	/// <returns>The key and certificates data.</returns>
+	protected byte[] WriteKeyAndCertificatesData(params byte[][] components)
+	{
+		ArgumentNullException.ThrowIfNull(components);
+
+		using var worker = new SshDataWorker();
+		worker.Write(Name, Encoding.ASCII);
+		foreach (var component in components)
+		{
+			worker.WriteMpint(component);
+		}
+
+		return worker.ToByteArray();
 	}
 
 	/// <summary>
@@ -48,7 +95,9 @@ public abstract class PublicKeyAlgorithm
 
 		using var worker = new SshDataWorker(signatureData);
 		if (worker.ReadString(Encoding.ASCII) != Name)
+		{
 			throw new CryptographicException("Signature was not created with this algorithm.");
+		}
 
 		var signature = worker.ReadBinary();
 		return signature;

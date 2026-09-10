@@ -95,35 +95,39 @@ public class ConnectionService : SshService
 		{
 			while (true)
 			{
-				var message = _messageQueue.Take(_messageCts.Token);
-				switch (message)
-				{
-					case ChannelOpenMessage channelOpenMessage:
-						HandleMessage(channelOpenMessage);
-						break;
-					case ChannelRequestMessage channelRequestMessage:
-						HandleMessage(channelRequestMessage);
-						break;
-					case ChannelDataMessage channelDataMessage:
-						HandleMessage(channelDataMessage);
-						break;
-					case ChannelEofMessage channelEofMessage:
-						HandleMessage(channelEofMessage);
-						break;
-					case ChannelCloseMessage channelCloseMessage:
-						HandleMessage(channelCloseMessage);
-						break;
-					case ShouldIgnoreMessage shouldIgnoreMessage:
-						HandleMessage(shouldIgnoreMessage);
-						break;
-					default:
-						throw new SshConnectionException(string.Format("Unknown message type: {0}.", message.GetType().Name));
-				}
+				Dispatch(_messageQueue.Take(_messageCts.Token));
 			}
 		}
 		catch (OperationCanceledException)
 		{
 			// Expected when the service is closed via cancellation token
+		}
+	}
+
+	private void Dispatch(ConnectionServiceMessage message)
+	{
+		switch (message)
+		{
+			case ChannelOpenMessage channelOpenMessage:
+				HandleMessage(channelOpenMessage);
+				break;
+			case ChannelRequestMessage channelRequestMessage:
+				HandleMessage(channelRequestMessage);
+				break;
+			case ChannelDataMessage channelDataMessage:
+				HandleMessage(channelDataMessage);
+				break;
+			case ChannelEofMessage channelEofMessage:
+				HandleMessage(channelEofMessage);
+				break;
+			case ChannelCloseMessage channelCloseMessage:
+				HandleMessage(channelCloseMessage);
+				break;
+			case ShouldIgnoreMessage shouldIgnoreMessage:
+				HandleMessage(shouldIgnoreMessage);
+				break;
+			default:
+				throw new SshConnectionException(string.Format("Unknown message type: {0}.", message.GetType().Name));
 		}
 	}
 
@@ -188,29 +192,37 @@ public class ConnectionService : SshService
 		switch (message.RequestType)
 		{
 			case "exec":
-				var msg = Message.LoadFrom<CommandRequestMessage>(message);
-				HandleMessage(msg);
+				HandleMessage(Message.LoadFrom<CommandRequestMessage>(message));
 				break;
 			case "shell":
-				var shell_msg = Message.LoadFrom<ShellRequestMessage>(message);
-				HandleMessage(shell_msg);
+				HandleMessage(Message.LoadFrom<ShellRequestMessage>(message));
 				break;
 			case "pty-req":
-				var pty_msg = Message.LoadFrom<PtyRequestMessage>(message);
-				HandleMessage(pty_msg);
+				HandleMessage(Message.LoadFrom<PtyRequestMessage>(message));
 				break;
 			case "env":
-				var env_msg = Message.LoadFrom<EnvMessage>(message);
-				HandleMessage(env_msg);
+				HandleMessage(Message.LoadFrom<EnvMessage>(message));
 				break;
 			case "subsystem":
-				var sub_msg = Message.LoadFrom<SubsystemRequestMessage>(message);
-				HandleMessage(sub_msg);
+				HandleMessage(Message.LoadFrom<SubsystemRequestMessage>(message));
 				break;
 			case "window-change":
-				var window_change_msg = Message.LoadFrom<WindowChangeMessage>(message);
-				HandleMessage(window_change_msg);
+				HandleMessage(Message.LoadFrom<WindowChangeMessage>(message));
 				break;
+			default:
+				HandleClientSpecificRequest(message);
+				break;
+		}
+	}
+
+	/// <summary>
+	/// Handles the channel requests that are specific to a client rather than part of RFC 4254.
+	/// </summary>
+	/// <exception cref="SshConnectionException">The request type is not one this server knows.</exception>
+	private void HandleClientSpecificRequest(ChannelRequestMessage message)
+	{
+		switch (message.RequestType)
+		{
 			case "simple@putty.projects.tartarus.org":
 				//https://tartarus.org/~simon/putty-snapshots/htmldoc/AppendixF.html
 				if (message.WantReply)
@@ -230,10 +242,13 @@ public class ConnectionService : SshService
 				break;
 			default:
 				if (message.WantReply)
+				{
 					_session.SendMessage(new ChannelFailureMessage
 					{
 						RecipientChannel = FindChannelByServerId<Channel>(message.RecipientChannel).ClientChannelId
 					});
+				}
+
 				throw new SshConnectionException(string.Format("Unknown request type: {0}.", message.RequestType));
 		}
 	}
@@ -245,7 +260,9 @@ public class ConnectionService : SshService
 		EnvReceived?.Invoke(_session, new EnvironmentArgs(channel, message.Name!, message.Value!, _auth!));
 
 		if (message.WantReply)
+		{
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+		}
 	}
 
 	private void HandleMessage(PtyRequestMessage message)
@@ -262,7 +279,9 @@ public class ConnectionService : SshService
 				message.modes, _auth!));
 
 		if (message.WantReply)
+		{
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+		}
 	}
 
 	private void HandleMessage(ChannelDataMessage message)
@@ -320,7 +339,9 @@ public class ConnectionService : SshService
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
 		if (message.WantReply)
+		{
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+		}
 
 		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "shell", null!, _auth!));
 	}
@@ -330,7 +351,9 @@ public class ConnectionService : SshService
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
 		if (message.WantReply)
+		{
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+		}
 
 		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "exec", message.Command!, _auth!));
 	}
@@ -340,7 +363,9 @@ public class ConnectionService : SshService
 		var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
 
 		if (message.WantReply)
+		{
 			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+		}
 
 		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "subsystem", message.Name!, _auth!));
 	}

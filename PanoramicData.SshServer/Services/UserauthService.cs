@@ -1,4 +1,5 @@
-﻿using PanoramicData.SshServer.Messages;
+﻿using PanoramicData.SshServer.Algorithms;
+using PanoramicData.SshServer.Messages;
 using PanoramicData.SshServer.Messages.Userauth;
 using System;
 
@@ -23,6 +24,7 @@ public class UserAuthService(Session session) : SshService(session)
 	/// <inheritdoc />
 	protected internal override void CloseService()
 	{
+		// Nothing to release: this service owns no channels, sockets or background loops.
 	}
 
 	internal void HandleMessageCore(UserAuthServiceMessage message)
@@ -80,12 +82,7 @@ public class UserAuthService(Session session) : SshService(session)
 
 		if (verifed)
 		{
-			_session.RegisterService(message.ServiceName, args);
-
-			Succeed?.Invoke(this, message.ServiceName);
-
-			_session.SendMessage(new SuccessMessage());
-			return;
+			Accept(message.ServiceName, args);
 		}
 		else
 		{
@@ -93,66 +90,76 @@ public class UserAuthService(Session session) : SshService(session)
 		}
 	}
 
+	/// <summary>
+	/// Registers the service the client authenticated for and tells it authentication succeeded.
+	/// </summary>
+	private void Accept(string serviceName, UserAuthArgs args)
+	{
+		_session.RegisterService(serviceName, args);
+
+		Succeed?.Invoke(this, serviceName);
+
+		_session.SendMessage(new SuccessMessage());
+	}
+
 	private void HandleMessage(PublicKeyRequestMessage message)
 	{
-		if (message.KeyAlgorithmName is null || message.PublicKey is null || message.Username is null || message.ServiceName is null)
+		if (message.KeyAlgorithmName is null
+			|| message.PublicKey is null
+			|| message.Username is null
+			|| message.ServiceName is null
+			|| !Session._publicKeyAlgorithms.TryGetValue(message.KeyAlgorithmName, out var value))
 		{
 			_session.SendMessage(new FailureMessage());
 			return;
 		}
 
-		if (Session._publicKeyAlgorithms.TryGetValue(message.KeyAlgorithmName, out var value))
-		{
-			var verifed = false;
+		var keyAlg = value(null);
+		keyAlg.LoadKeyAndCertificatesData(message.PublicKey);
 
-			var keyAlg = value(null);
-			keyAlg.LoadKeyAndCertificatesData(message.PublicKey);
+		var args = new UserAuthArgs(_session, message.Username, message.KeyAlgorithmName, keyAlg.GetFingerprint(), message.PublicKey);
+		UserAuth?.Invoke(this, args);
 
-			var args = new UserAuthArgs(_session, message.Username, message.KeyAlgorithmName, keyAlg.GetFingerprint(), message.PublicKey);
-			UserAuth?.Invoke(this, args);
-			verifed = args.Result;
-
-			if (!verifed)
-			{
-				_session.SendMessage(new FailureMessage());
-				return;
-			}
-
-			if (!message.HasSignature)
-			{
-				_session.SendMessage(new PublicKeyOkMessage { KeyAlgorithmName = message.KeyAlgorithmName, PublicKey = message.PublicKey });
-				return;
-			}
-
-			if (message.Signature is null || message.PayloadWithoutSignature is null || _session.ExchangeHash is null)
-			{
-				_session.SendMessage(new FailureMessage());
-				return;
-			}
-
-			var sig = keyAlg.GetSignature(message.Signature);
-
-			using (var worker = new SshDataWorker())
-			{
-				worker.WriteBinary(_session.ExchangeHash);
-				worker.Write(message.PayloadWithoutSignature);
-
-				verifed = keyAlg.VerifyData(worker.ToByteArray(), sig);
-			}
-
-			if (!verifed)
-			{
-				_session.SendMessage(new FailureMessage());
-				return;
-			}
-
-			_session.RegisterService(message.ServiceName, args);
-			Succeed?.Invoke(this, message.ServiceName);
-			_session.SendMessage(new SuccessMessage());
-		}
-		else
+		if (!args.Result)
 		{
 			_session.SendMessage(new FailureMessage());
+			return;
 		}
+
+		if (!message.HasSignature)
+		{
+			// The client is only asking whether this key would be accepted, so say so and
+			// wait for it to send the same request again, signed this time (RFC 4252 section 7).
+			_session.SendMessage(new PublicKeyOkMessage { KeyAlgorithmName = message.KeyAlgorithmName, PublicKey = message.PublicKey });
+			return;
+		}
+
+		if (!VerifySignature(message, keyAlg))
+		{
+			_session.SendMessage(new FailureMessage());
+			return;
+		}
+
+		Accept(message.ServiceName, args);
+	}
+
+	/// <summary>
+	/// Checks the signature the client sent over the session's exchange hash and its own payload.
+	/// </summary>
+	/// <returns>True if the signature is present and valid.</returns>
+	private bool VerifySignature(PublicKeyRequestMessage message, PublicKeyAlgorithm keyAlg)
+	{
+		if (message.Signature is null || message.PayloadWithoutSignature is null || _session.ExchangeHash is null)
+		{
+			return false;
+		}
+
+		var sig = keyAlg.GetSignature(message.Signature);
+
+		using var worker = new SshDataWorker();
+		worker.WriteBinary(_session.ExchangeHash);
+		worker.Write(message.PayloadWithoutSignature);
+
+		return keyAlg.VerifyData(worker.ToByteArray(), sig);
 	}
 }

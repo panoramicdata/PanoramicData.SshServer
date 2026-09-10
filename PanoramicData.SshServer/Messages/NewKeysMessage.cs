@@ -14,10 +14,12 @@ public class NewKeysMessage : Message
 	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
+		// SSH_MSG_NEWKEYS has no payload beyond the message number (RFC 4253 section 7.3).
 	}
 
 	/// <inheritdoc />
 	protected override void OnGetPacket(SshDataWorker writer)
 	{
+		// SSH_MSG_NEWKEYS has no payload beyond the message number (RFC 4253 section 7.3).
 	}
 }

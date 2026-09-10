@@ -11,10 +11,20 @@ static class PseudoConsoleApi
 	internal const uint PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE = 0x00020016;
 
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct COORD
+	internal struct COORD : IEquatable<COORD>
 	{
 		public short X;
 		public short Y;
+
+		public readonly bool Equals(COORD other) => X == other.X && Y == other.Y;
+
+		public override readonly bool Equals(object? obj) => obj is COORD other && Equals(other);
+
+		public override readonly int GetHashCode() => HashCode.Combine(X, Y);
+
+		public static bool operator ==(COORD left, COORD right) => left.Equals(right);
+
+		public static bool operator !=(COORD left, COORD right) => !left.Equals(right);
 	}
 
 	[DllImport("kernel32.dll", SetLastError = true)]
