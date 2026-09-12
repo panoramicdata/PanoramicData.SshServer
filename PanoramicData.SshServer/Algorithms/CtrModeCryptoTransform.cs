@@ -27,8 +27,7 @@ public class CtrModeCryptoTransform : ICryptoTransform
 		// plaintext, so the underlying cipher must encrypt a single block with no chaining
 		// and no padding. ECB is how .NET exposes that raw block operation; the mode this
 		// class presents to callers is CTR, not ECB.
-		// nosemgrep: csharp.dotnet.security.use_ecb_mode.use_ecb_mode
-		// nosemgrep: csharp_crypto_rule-WeakCipherMode
+		// nosemgrep: csharp.dotnet.security.use_ecb_mode.use_ecb_mode, csharp_crypto_rule-WeakCipherMode
 		algorithm.Mode = CipherMode.ECB;
 		algorithm.Padding = PaddingMode.None;
 

@@ -24,19 +24,18 @@ sealed class Program
 		using var cancellationTokenSource = new CancellationTokenSource();
 		var services = new ServiceCollection();
 
-		// Determine where we will look for the appsettings.json file in debug mode
-		var appSettingsPath = "../../../appsettings.json";
-		var fileInfo = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), appSettingsPath));
-
 		// Build configuration
-		var configuration = new ConfigurationBuilder()
-			.SetBasePath(Directory.GetCurrentDirectory())
+		var configurationBuilder = new ConfigurationBuilder()
+			.SetBasePath(Directory.GetCurrentDirectory());
 #if DEBUG
-                .AddJsonFile(fileInfo.FullName, optional: false, reloadOnChange: true)
+		// In debug builds the settings file sits in the project directory, above the output
+		// directory, so it is located relative to that rather than alongside the binary.
+		var settingsFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "../../../appsettings.json"));
+		configurationBuilder.AddJsonFile(settingsFile.FullName, optional: false, reloadOnChange: true);
 #else
-			.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+		configurationBuilder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 #endif
-			.Build();
+		var configuration = configurationBuilder.Build();
 
 		// Register configuration
 		services

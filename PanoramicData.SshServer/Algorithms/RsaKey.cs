@@ -10,10 +10,18 @@ public class RsaKey : PublicKeyAlgorithm
 	private readonly RSACryptoServiceProvider _algorithm = new();
 
 	/// <summary>
+	/// Initializes a new instance of the <see cref="RsaKey"/> class with a newly generated key.
+	/// </summary>
+	public RsaKey()
+		: this(null)
+	{
+	}
+
+	/// <summary>
 	/// Initializes a new instance of the <see cref="RsaKey"/> class.
 	/// </summary>
-	/// <param name="key">The optional base64-encoded key.</param>
-	public RsaKey(string? key = null)
+	/// <param name="key">The base64-encoded key, or null to generate one.</param>
+	public RsaKey(string? key)
 		: base(key) => ImportConstructorKey();
 
 	/// <inheritdoc />

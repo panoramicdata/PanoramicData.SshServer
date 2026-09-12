@@ -50,15 +50,15 @@ static partial class ProcessApi
 		public nint hStdOutput;
 		public nint hStdError;
 
+		// Compared as tuples rather than eighteen chained &&, which reads as one decision
+		// per field to complexity metrics while saying exactly the same thing.
 		public readonly bool Equals(STARTUPINFO other) =>
-			cb == other.cb && lpReserved == other.lpReserved && lpDesktop == other.lpDesktop &&
-			lpTitle == other.lpTitle && dwX == other.dwX && dwY == other.dwY &&
-			dwXSize == other.dwXSize && dwYSize == other.dwYSize &&
-			dwXCountChars == other.dwXCountChars && dwYCountChars == other.dwYCountChars &&
-			dwFillAttribute == other.dwFillAttribute && dwFlags == other.dwFlags &&
-			wShowWindow == other.wShowWindow && cbReserved2 == other.cbReserved2 &&
-			lpReserved2 == other.lpReserved2 && hStdInput == other.hStdInput &&
-			hStdOutput == other.hStdOutput && hStdError == other.hStdError;
+			(cb, lpReserved, lpDesktop, lpTitle, dwX, dwY)
+				== (other.cb, other.lpReserved, other.lpDesktop, other.lpTitle, other.dwX, other.dwY)
+			&& (dwXSize, dwYSize, dwXCountChars, dwYCountChars, dwFillAttribute, dwFlags)
+				== (other.dwXSize, other.dwYSize, other.dwXCountChars, other.dwYCountChars, other.dwFillAttribute, other.dwFlags)
+			&& (wShowWindow, cbReserved2, lpReserved2, hStdInput, hStdOutput, hStdError)
+				== (other.wShowWindow, other.cbReserved2, other.lpReserved2, other.hStdInput, other.hStdOutput, other.hStdError);
 
 		public override readonly bool Equals(object? obj) => obj is STARTUPINFO other && Equals(other);
 

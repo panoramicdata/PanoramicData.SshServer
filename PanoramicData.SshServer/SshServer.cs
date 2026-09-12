@@ -157,8 +157,8 @@ public class SshServer(
 		}
 		catch (Exception ex)
 		{
-			// One connection failing to be accepted must not take the listener down with it;
-			// the finally below queues the next accept either way.
+			// One connection failing to be accepted must not take the listener down with it.
+			// The finally block below queues the next accept either way.
 			ExceptionRaised?.Invoke(this, ex);
 		}
 		finally

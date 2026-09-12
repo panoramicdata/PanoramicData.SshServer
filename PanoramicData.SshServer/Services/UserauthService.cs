@@ -104,20 +104,14 @@ public class UserAuthService(Session session) : SshService(session)
 
 	private void HandleMessage(PublicKeyRequestMessage message)
 	{
-		if (message.KeyAlgorithmName is null
-			|| message.PublicKey is null
-			|| message.Username is null
-			|| message.ServiceName is null
-			|| !Session._publicKeyAlgorithms.TryGetValue(message.KeyAlgorithmName, out var value))
+		var keyAlg = LoadRequestKey(message);
+		if (keyAlg is null)
 		{
 			_session.SendMessage(new FailureMessage());
 			return;
 		}
 
-		var keyAlg = value(null);
-		keyAlg.LoadKeyAndCertificatesData(message.PublicKey);
-
-		var args = new UserAuthArgs(_session, message.Username, message.KeyAlgorithmName, keyAlg.GetFingerprint(), message.PublicKey);
+		var args = new UserAuthArgs(_session, message.Username!, message.KeyAlgorithmName!, keyAlg.GetFingerprint(), message.PublicKey!);
 		UserAuth?.Invoke(this, args);
 
 		if (!args.Result)
@@ -140,7 +134,31 @@ public class UserAuthService(Session session) : SshService(session)
 			return;
 		}
 
-		Accept(message.ServiceName, args);
+		Accept(message.ServiceName!, args);
+	}
+
+	/// <summary>
+	/// Loads the public key a request carries.
+	/// </summary>
+	/// <returns>
+	/// The loaded key, or null if the request is missing a field it needs or names a key
+	/// algorithm this server does not support.
+	/// </returns>
+	private static PublicKeyAlgorithm? LoadRequestKey(PublicKeyRequestMessage message)
+	{
+		if (message.KeyAlgorithmName is null
+			|| message.PublicKey is null
+			|| message.Username is null
+			|| message.ServiceName is null
+			|| !Session._publicKeyAlgorithms.TryGetValue(message.KeyAlgorithmName, out var value))
+		{
+			return null;
+		}
+
+		var keyAlg = value(null);
+		keyAlg.LoadKeyAndCertificatesData(message.PublicKey);
+
+		return keyAlg;
 	}
 
 	/// <summary>

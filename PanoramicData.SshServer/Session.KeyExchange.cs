@@ -94,39 +94,4 @@ public partial class Session
 
 		return alg.ComputeHash(worker.ToByteArray());
 	}
-
-	internal SshService? RegisterService(string? serviceName) => RegisterService(serviceName, null);
-
-	internal SshService? RegisterService(string? serviceName, UserAuthArgs? auth)
-	{
-		var service = CreateService(serviceName, auth);
-
-		if (service is not null)
-		{
-			ServiceRegistered?.Invoke(this, service);
-			_services.Add(service);
-		}
-
-		return service;
-	}
-
-	/// <summary>
-	/// Creates the service the client asked for, or null if it is unknown or already registered.
-	/// </summary>
-	private SshService? CreateService(string? serviceName, UserAuthArgs? auth)
-	{
-		if (serviceName == "ssh-userauth")
-		{
-			return GetService<UserAuthService>() is null ? new UserAuthService(this) : null;
-		}
-
-		if (serviceName == "ssh-connection")
-		{
-			return auth is not null && GetService<ConnectionService>() is null
-				? new ConnectionService(this, auth)
-				: null;
-		}
-
-		return null;
-	}
 }

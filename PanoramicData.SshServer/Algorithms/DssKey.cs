@@ -10,10 +10,18 @@ public class DssKey : PublicKeyAlgorithm
 	private readonly DSACryptoServiceProvider _algorithm = new();
 
 	/// <summary>
+	/// Initializes a new instance of the <see cref="DssKey"/> class with a newly generated key.
+	/// </summary>
+	public DssKey()
+		: this(null)
+	{
+	}
+
+	/// <summary>
 	/// Initializes a new instance of the <see cref="DssKey"/> class.
 	/// </summary>
-	/// <param name="key">The optional base64-encoded key.</param>
-	public DssKey(string? key = null)
+	/// <param name="key">The base64-encoded key, or null to generate one.</param>
+	public DssKey(string? key)
 		: base(key) => ImportConstructorKey();
 
 	/// <inheritdoc />

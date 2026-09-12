@@ -9,6 +9,16 @@ namespace PanoramicData.SshServer;
 /// </summary>
 public partial class Session
 {
+	/// <summary>
+	/// Occurs when a service is registered.
+	/// </summary>
+	public event EventHandler<SshService>? ServiceRegistered;
+
+	/// <summary>
+	/// Occurs when keys are exchanged.
+	/// </summary>
+	public event EventHandler<KeyExchangeArgs>? KeysExchanged;
+
 	private void HandleMessageCore(Message message)
 	{
 		if (TryHandleTransportMessage(message))
@@ -164,4 +174,39 @@ public partial class Session
 
 	private void HandleMessage(ConnectionServiceMessage message)
 		=> GetService<ConnectionService>()?.HandleMessageCore(message);
+
+	internal SshService? RegisterService(string? serviceName) => RegisterService(serviceName, null);
+
+	internal SshService? RegisterService(string? serviceName, UserAuthArgs? auth)
+	{
+		var service = CreateService(serviceName, auth);
+
+		if (service is not null)
+		{
+			ServiceRegistered?.Invoke(this, service);
+			_services.Add(service);
+		}
+
+		return service;
+	}
+
+	/// <summary>
+	/// Creates the service the client asked for, or null if it is unknown or already registered.
+	/// </summary>
+	private SshService? CreateService(string? serviceName, UserAuthArgs? auth)
+	{
+		if (serviceName == "ssh-userauth")
+		{
+			return GetService<UserAuthService>() is null ? new UserAuthService(this) : null;
+		}
+
+		if (serviceName == "ssh-connection")
+		{
+			return auth is not null && GetService<ConnectionService>() is null
+				? new ConnectionService(this, auth)
+				: null;
+		}
+
+		return null;
+	}
 }

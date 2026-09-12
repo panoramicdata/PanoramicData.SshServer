@@ -153,16 +153,6 @@ public partial class Session
 	/// </summary>
 	public event EventHandler<EventArgs>? Disconnected;
 
-	/// <summary>
-	/// Occurs when a service is registered.
-	/// </summary>
-	public event EventHandler<SshService>? ServiceRegistered;
-
-	/// <summary>
-	/// Occurs when keys are exchanged.
-	/// </summary>
-	public event EventHandler<KeyExchangeArgs>? KeysExchanged;
-
 	internal void EstablishConnection()
 	{
 		if (!_socket.Connected)
