@@ -6,7 +6,7 @@ namespace PanoramicData.SshServer.Services;
 /// <summary>
 /// Contains arguments for a key exchange event.
 /// </summary>
-public class KeyExchangeArgs
+public class KeyExchangeArgs : KeyExchangeInitMessage
 {
 	/// <summary>
 	/// Initializes a new instance of the <see cref="KeyExchangeArgs"/> class.
@@ -24,10 +24,11 @@ public class KeyExchangeArgs
 	/// <param name="s">The SSH session.</param>
 	/// <param name="message">The key exchange init message the client sent.</param>
 	public KeyExchangeArgs(Session s, KeyExchangeInitMessage message)
+		: this(s)
 	{
 		ArgumentNullException.ThrowIfNull(message);
 
-		Session = s;
+		Cookie = message.Cookie;
 		KeyExchangeAlgorithms = message.KeyExchangeAlgorithms;
 		ServerHostKeyAlgorithms = message.ServerHostKeyAlgorithms;
 		EncryptionAlgorithmsClientToServer = message.EncryptionAlgorithmsClientToServer;
@@ -45,58 +46,36 @@ public class KeyExchangeArgs
 	/// </summary>
 	public Session Session { get; private set; }
 
-	/// <summary>
-	/// Gets the exchange cookie.
-	/// </summary>
-	public byte[]? Cookie { get; private set; }
+	/// <inheritdoc />
+	public new byte[]? Cookie { get; private set; }
 
-	/// <summary>
-	/// Gets or sets the key exchange algorithms.
-	/// </summary>
-	public string[]? KeyExchangeAlgorithms { get; set; }
+	/// <inheritdoc />
+	public new string[]? KeyExchangeAlgorithms { get; set; }
 
-	/// <summary>
-	/// Gets or sets the server host key algorithms.
-	/// </summary>
-	public string[]? ServerHostKeyAlgorithms { get; set; }
+	/// <inheritdoc />
+	public new string[]? ServerHostKeyAlgorithms { get; set; }
 
-	/// <summary>
-	/// Gets or sets the client-to-server encryption algorithms.
-	/// </summary>
-	public string[]? EncryptionAlgorithmsClientToServer { get; set; }
+	/// <inheritdoc />
+	public new string[]? EncryptionAlgorithmsClientToServer { get; set; }
 
-	/// <summary>
-	/// Gets or sets the server-to-client encryption algorithms.
-	/// </summary>
-	public string[]? EncryptionAlgorithmsServerToClient { get; set; }
+	/// <inheritdoc />
+	public new string[]? EncryptionAlgorithmsServerToClient { get; set; }
 
-	/// <summary>
-	/// Gets or sets the client-to-server MAC algorithms.
-	/// </summary>
-	public string[]? MacAlgorithmsClientToServer { get; set; }
+	/// <inheritdoc />
+	public new string[]? MacAlgorithmsClientToServer { get; set; }
 
-	/// <summary>
-	/// Gets or sets the server-to-client MAC algorithms.
-	/// </summary>
-	public string[]? MacAlgorithmsServerToClient { get; set; }
+	/// <inheritdoc />
+	public new string[]? MacAlgorithmsServerToClient { get; set; }
 
-	/// <summary>
-	/// Gets or sets the client-to-server compression algorithms.
-	/// </summary>
-	public string[]? CompressionAlgorithmsClientToServer { get; set; }
+	/// <inheritdoc />
+	public new string[]? CompressionAlgorithmsClientToServer { get; set; }
 
-	/// <summary>
-	/// Gets or sets the server-to-client compression algorithms.
-	/// </summary>
-	public string[]? CompressionAlgorithmsServerToClient { get; set; }
+	/// <inheritdoc />
+	public new string[]? CompressionAlgorithmsServerToClient { get; set; }
 
-	/// <summary>
-	/// Gets or sets the client-to-server languages.
-	/// </summary>
-	public string[]? LanguagesClientToServer { get; set; }
+	/// <inheritdoc />
+	public new string[]? LanguagesClientToServer { get; set; }
 
-	/// <summary>
-	/// Gets or sets the server-to-client languages.
-	/// </summary>
-	public string[]? LanguagesServerToClient { get; set; }
+	/// <inheritdoc />
+	public new string[]? LanguagesServerToClient { get; set; }
 }

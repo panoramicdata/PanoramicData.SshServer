@@ -88,20 +88,30 @@ public class KeyExchangeInitMessage : Message
 	/// <inheritdoc />
 	public override byte MessageType => MessageNumber;
 
+	private static string[] ReadAlgorithmList(SshDataWorker reader)
+	{
+		return reader.ReadString(Encoding.ASCII).Split(',');
+	}
+
+	private static void WriteAlgorithmList(SshDataWorker writer, string[]? algorithms)
+	{
+		writer.Write(string.Join(",", algorithms!), Encoding.ASCII);
+	}
+
 	/// <inheritdoc />
 	protected override void OnLoad(SshDataWorker reader)
 	{
 		Cookie = reader.ReadBinary(16);
-		KeyExchangeAlgorithms = reader.ReadString(Encoding.ASCII).Split(',');
-		ServerHostKeyAlgorithms = reader.ReadString(Encoding.ASCII).Split(',');
-		EncryptionAlgorithmsClientToServer = reader.ReadString(Encoding.ASCII).Split(',');
-		EncryptionAlgorithmsServerToClient = reader.ReadString(Encoding.ASCII).Split(',');
-		MacAlgorithmsClientToServer = reader.ReadString(Encoding.ASCII).Split(',');
-		MacAlgorithmsServerToClient = reader.ReadString(Encoding.ASCII).Split(',');
-		CompressionAlgorithmsClientToServer = reader.ReadString(Encoding.ASCII).Split(',');
-		CompressionAlgorithmsServerToClient = reader.ReadString(Encoding.ASCII).Split(',');
-		LanguagesClientToServer = reader.ReadString(Encoding.ASCII).Split(',');
-		LanguagesServerToClient = reader.ReadString(Encoding.ASCII).Split(',');
+		KeyExchangeAlgorithms = ReadAlgorithmList(reader);
+		ServerHostKeyAlgorithms = ReadAlgorithmList(reader);
+		EncryptionAlgorithmsClientToServer = ReadAlgorithmList(reader);
+		EncryptionAlgorithmsServerToClient = ReadAlgorithmList(reader);
+		MacAlgorithmsClientToServer = ReadAlgorithmList(reader);
+		MacAlgorithmsServerToClient = ReadAlgorithmList(reader);
+		CompressionAlgorithmsClientToServer = ReadAlgorithmList(reader);
+		CompressionAlgorithmsServerToClient = ReadAlgorithmList(reader);
+		LanguagesClientToServer = ReadAlgorithmList(reader);
+		LanguagesServerToClient = ReadAlgorithmList(reader);
 		FirstKexPacketFollows = reader.ReadBoolean();
 		Reserved = reader.ReadUInt32();
 	}
@@ -110,16 +120,16 @@ public class KeyExchangeInitMessage : Message
 	protected override void OnGetPacket(SshDataWorker writer)
 	{
 		writer.Write(Cookie);
-		writer.Write(string.Join(",", KeyExchangeAlgorithms!), Encoding.ASCII);
-		writer.Write(string.Join(",", ServerHostKeyAlgorithms!), Encoding.ASCII);
-		writer.Write(string.Join(",", EncryptionAlgorithmsClientToServer!), Encoding.ASCII);
-		writer.Write(string.Join(",", EncryptionAlgorithmsServerToClient!), Encoding.ASCII);
-		writer.Write(string.Join(",", MacAlgorithmsClientToServer!), Encoding.ASCII);
-		writer.Write(string.Join(",", MacAlgorithmsServerToClient!), Encoding.ASCII);
-		writer.Write(string.Join(",", CompressionAlgorithmsClientToServer!), Encoding.ASCII);
-		writer.Write(string.Join(",", CompressionAlgorithmsServerToClient!), Encoding.ASCII);
-		writer.Write(string.Join(",", LanguagesClientToServer!), Encoding.ASCII);
-		writer.Write(string.Join(",", LanguagesServerToClient!), Encoding.ASCII);
+		WriteAlgorithmList(writer, KeyExchangeAlgorithms);
+		WriteAlgorithmList(writer, ServerHostKeyAlgorithms);
+		WriteAlgorithmList(writer, EncryptionAlgorithmsClientToServer);
+		WriteAlgorithmList(writer, EncryptionAlgorithmsServerToClient);
+		WriteAlgorithmList(writer, MacAlgorithmsClientToServer);
+		WriteAlgorithmList(writer, MacAlgorithmsServerToClient);
+		WriteAlgorithmList(writer, CompressionAlgorithmsClientToServer);
+		WriteAlgorithmList(writer, CompressionAlgorithmsServerToClient);
+		WriteAlgorithmList(writer, LanguagesClientToServer);
+		WriteAlgorithmList(writer, LanguagesServerToClient);
 		writer.Write(FirstKexPacketFollows);
 		writer.Write(Reserved);
 	}

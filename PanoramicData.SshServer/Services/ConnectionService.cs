@@ -163,29 +163,9 @@ public class ConnectionService : SshService
 		// Intentionally empty: this message type is ignored per SSH protocol
 	}
 
-	private void HandleMessage(ForwardedTcpIpMessage message)
-	{
-		var channel = HandleChannelOpenMessage(message);
-		var args = new TcpRequestArgs(channel,
-			message.Address!,
-			(int)message.Port,
-			message.OriginatorIPAddress!,
-			(int)message.OriginatorPort,
-			_auth!);
-		TcpForwardRequest?.Invoke(_session, args);
-	}
+	private void HandleMessage(ForwardedTcpIpMessage message) => HandleForwardedTcpIpMessage(message);
 
-	private void HandleMessage(DirectTcpIpMessage message)
-	{
-		var channel = HandleChannelOpenMessage(message);
-		var args = new TcpRequestArgs(channel,
-			message.Host,
-			(int)message.Port,
-			message.OriginatorIPAddress,
-			(int)message.OriginatorPort,
-			_auth!);
-		TcpForwardRequest?.Invoke(_session, args);
-	}
+	private void HandleMessage(DirectTcpIpMessage message) => HandleDirectTcpIpMessage(message);
 
 	private void HandleMessage(ChannelRequestMessage message)
 	{
@@ -227,15 +207,13 @@ public class ConnectionService : SshService
 				//https://tartarus.org/~simon/putty-snapshots/htmldoc/AppendixF.html
 				if (message.WantReply)
 				{
-					var c = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
-					_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = c.ClientChannelId });
+					SendChannelSuccessMessage(FindChannelByServerId<SessionChannel>(message.RecipientChannel));
 				}
 
 				break;
 			case "winadj@putty.projects.tartarus.org":
 				//https://tartarus.org/~simon/putty-snapshots/htmldoc/AppendixF.html
-				var channel = FindChannelByServerId<SessionChannel>(message.RecipientChannel);
-				_session.SendMessage(new ChannelFailureMessage { RecipientChannel = channel.ClientChannelId });
+				SendChannelFailureMessage(FindChannelByServerId<SessionChannel>(message.RecipientChannel));
 				break;
 			case "auth-agent-req@openssh.com":
 				// https://github.com/openssh/openssh-portable/blob/V_8_0_P1/session.c#L2225
@@ -261,7 +239,7 @@ public class ConnectionService : SshService
 
 		if (message.WantReply)
 		{
-			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+			SendChannelSuccessMessage(channel);
 		}
 	}
 
@@ -280,7 +258,7 @@ public class ConnectionService : SshService
 
 		if (message.WantReply)
 		{
-			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+			SendChannelSuccessMessage(channel);
 		}
 	}
 
@@ -308,9 +286,41 @@ public class ConnectionService : SshService
 		channel.OnClose();
 	}
 
-	private void HandleMessage(SessionOpenMessage message) => HandleChannelOpenMessage(message);
+	private void HandleMessage(SessionOpenMessage message) => CreateSessionChannel(message);
 
-	private SessionChannel HandleChannelOpenMessage(ChannelOpenMessage message)
+	private void RaiseCommandOpened(SessionChannel channel, string commandType, string? command)
+	{
+		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, commandType, command!, _auth!));
+	}
+
+	private void SendChannelSuccessMessage(SessionChannel channel)
+	{
+		_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+	}
+
+	private void SendChannelFailureMessage(SessionChannel channel)
+	{
+		_session.SendMessage(new ChannelFailureMessage { RecipientChannel = channel.ClientChannelId });
+	}
+
+	private void HandleForwardedTcpIpMessage(ForwardedTcpIpMessage message)
+	{
+		var channel = CreateSessionChannel(message);
+		RaiseTcpForward(channel, message.Address!, (int)message.Port, message.OriginatorIPAddress!, (int)message.OriginatorPort);
+	}
+
+	private void HandleDirectTcpIpMessage(DirectTcpIpMessage message)
+	{
+		var channel = CreateSessionChannel(message);
+		RaiseTcpForward(channel, message.Host, (int)message.Port, message.OriginatorIPAddress, (int)message.OriginatorPort);
+	}
+
+	private void RaiseTcpForward(SessionChannel channel, string host, int port, string originatorAddress, int originatorPort)
+	{
+		TcpForwardRequest?.Invoke(_session, new TcpRequestArgs(channel, host, port, originatorAddress, originatorPort, _auth!));
+	}
+
+	private SessionChannel CreateSessionChannel(ChannelOpenMessage message)
 	{
 		var channel = new SessionChannel(
 			this,
@@ -322,16 +332,19 @@ public class ConnectionService : SshService
 		lock (_lock)
 			_channels.Add(channel);
 
-		var msg = new ChannelOpenConfirmationMessage
+		SendChannelOpenConfirmation(channel);
+		return channel;
+	}
+
+	private void SendChannelOpenConfirmation(SessionChannel channel)
+	{
+		_session.SendMessage(new ChannelOpenConfirmationMessage
 		{
 			RecipientChannel = channel.ClientChannelId,
 			SenderChannel = channel.ServerChannelId,
 			InitialWindowSize = channel.ServerInitialWindowSize,
 			MaximumPacketSize = channel.ServerMaxPacketSize
-		};
-
-		_session.SendMessage(msg);
-		return channel;
+		});
 	}
 
 	private void HandleMessage(ShellRequestMessage message)
@@ -340,10 +353,10 @@ public class ConnectionService : SshService
 
 		if (message.WantReply)
 		{
-			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+			SendChannelSuccessMessage(channel);
 		}
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "shell", null!, _auth!));
+		RaiseCommandOpened(channel, "shell", null!);
 	}
 
 	private void HandleMessage(CommandRequestMessage message)
@@ -352,10 +365,10 @@ public class ConnectionService : SshService
 
 		if (message.WantReply)
 		{
-			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+			SendChannelSuccessMessage(channel);
 		}
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "exec", message.Command!, _auth!));
+		RaiseCommandOpened(channel, "exec", message.Command!);
 	}
 
 	private void HandleMessage(SubsystemRequestMessage message)
@@ -364,10 +377,10 @@ public class ConnectionService : SshService
 
 		if (message.WantReply)
 		{
-			_session.SendMessage(new ChannelSuccessMessage { RecipientChannel = channel.ClientChannelId });
+			SendChannelSuccessMessage(channel);
 		}
 
-		CommandOpened?.Invoke(_session, new CommandRequestedArgs(channel, "subsystem", message.Name!, _auth!));
+		RaiseCommandOpened(channel, "subsystem", message.Name!);
 	}
 
 	private void HandleMessage(WindowChangeMessage message)
