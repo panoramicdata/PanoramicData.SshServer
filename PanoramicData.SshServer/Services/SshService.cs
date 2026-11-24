@@ -5,18 +5,27 @@ namespace PanoramicData.SshServer.Services;
 /// <summary>
 /// Base class for SSH services.
 /// </summary>
-/// <param name="session">The SSH session.</param>
-public abstract class SshService(Session session)
+public abstract class SshService
 {
+	/// <summary>
+	/// Initializes a new instance of the <see cref="SshService"/> class.
+	/// </summary>
+	/// <param name="session">The SSH session.</param>
+	protected SshService(Session session)
+	{
+		_session = session ?? throw new ArgumentNullException(nameof(session));
+		SessionId = session.Id;
+	}
+
 	/// <summary>
 	/// The SSH session.
 	/// </summary>
-	protected internal readonly Session _session = session ?? throw new ArgumentNullException(nameof(session));
+	protected internal readonly Session _session;
 
 	/// <summary>
 	/// Gets the session identifier.
 	/// </summary>
-	public Guid SessionId { get; } = session.Id;
+	public Guid SessionId { get; }
 
 	/// <summary>
 	/// Closes the service.
