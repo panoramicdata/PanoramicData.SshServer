@@ -19,7 +19,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: 11.0.x
 
     - name: Restore
       run: dotnet restore
@@ -66,7 +66,7 @@ jobs:
         # The runner user cannot write /usr/share/dotnet, the default install location.
         DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: 11.0.x
 
     - name: Build tests
       run: dotnet build PanoramicData.SshServer.Test/PanoramicData.SshServer.Test.csproj --configuration Debug
@@ -79,7 +79,7 @@ jobs:
     # comparable across the estate.
     - name: Run tests with coverage
       run: >-
-        ./PanoramicData.SshServer.Test/bin/Debug/net10.0/PanoramicData.SshServer.Test
+        ./PanoramicData.SshServer.Test/bin/Debug/net11.0/PanoramicData.SshServer.Test
         --coverage
         --coverage-settings ${{ github.workspace }}/coverage.config
         --coverage-output-format cobertura
@@ -93,7 +93,7 @@ jobs:
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
         project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-        coverage-reports: PanoramicData.SshServer.Test/bin/Debug/net10.0/TestResults/coverage.cobertura.xml
+        coverage-reports: PanoramicData.SshServer.Test/bin/Debug/net11.0/TestResults/coverage.cobertura.xml
 
     - name: Upload coverage artifact
       if: always()
@@ -101,7 +101,7 @@ jobs:
       uses: actions/upload-artifact@v7
       with:
         name: coverage
-        path: PanoramicData.SshServer.Test/bin/Debug/net10.0/TestResults/coverage.cobertura.xml
+        path: PanoramicData.SshServer.Test/bin/Debug/net11.0/TestResults/coverage.cobertura.xml
         retention-days: 7
 
   publish:
@@ -120,7 +120,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: 11.0.x
 
     - name: Login to NuGet
       id: login
