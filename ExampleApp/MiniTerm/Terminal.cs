@@ -52,7 +52,7 @@ public sealed class Terminal : IDisposable
 					break;
 				}
 
-				DataReceived?.Invoke(this, [.. buf.Take(length)]);
+				DataReceived?.Invoke(this, buf[..length]);
 			}
 
 			CloseReceived?.Invoke(this, 0);

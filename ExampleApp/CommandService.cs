@@ -77,7 +77,7 @@ public class CommandService
 			}
 
 			var data = bytes.Length != len
-				? [.. bytes.Take(len)]
+				? bytes[..len]
 				: bytes;
 			DataReceived?.Invoke(this, data);
 		}
